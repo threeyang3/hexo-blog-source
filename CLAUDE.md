@@ -25,7 +25,7 @@
 - `source/CNAME`：域名唯一事实来源。
 - `tools/verify-build.js`：部署保护验证。
 - `tools/verify-content.js`：文章 Front Matter、abbrlink、封面与受管链接校验。
-- `tools/smoke-live.js`：线上首页、Sitemap、Feed、robots 与加密文章检查。
+- `tools/smoke-live.js`：带重试的线上首页、发现文件、加密文章、旧 URL 与构建 SHA 检查。
 - `admin/server.js`：仅监听本机的 GUI 服务、API 与命令白名单。
 - `admin/content-store.js`：文章/素材读写、并发哈希、路径边界与主题视觉白名单。
 - `admin/release-report.js`：只读发布清单和受保护配置变更分组。
@@ -70,6 +70,8 @@
     不得把占位密码用于 `main` 构建或生产部署。
 17. 首次公开推送必须使用不含旧父提交的干净根提交；含历史明文密码的本地旧历史只能
     保存在不推送的本地恢复标签中。
+18. `postdeploy` 必须保留 `npm run smoke:live`；线上 `build-info.json` 的源码 SHA
+    未与当前提交一致时，部署不能视为完成。
 
 ## 常用命令
 

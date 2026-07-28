@@ -59,6 +59,10 @@ assert(
   mergedPostRedirect.includes('href="https://threeyang.top/posts/586a/"'),
   'Merged article canonical URL is incorrect'
 )
+assert(
+  (mergedPostRedirect.match(/rel="canonical"/g) || []).length === 1,
+  'Merged article redirect must contain exactly one canonical URL'
+)
 
 assertFile('public/sitemap.xml')
 assertFile('public/atom.xml')

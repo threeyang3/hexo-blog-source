@@ -79,6 +79,9 @@ npm run deploy
 npm run smoke:live
 ```
 
+`npm run deploy` 成功推送后会自动运行同一检查并等待 Pages 更新，只有首页、Sitemap、
+Atom、robots、加密文章、旧文章跳转和 `build-info.json` 源码提交全部匹配才算完成。
+
 ## 配置职责
 
 - `_config.yml`：Hexo 站点、URL、永久链接、插件和部署配置。

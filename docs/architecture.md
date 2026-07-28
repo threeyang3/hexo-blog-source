@@ -180,6 +180,11 @@ secret 会失败；只有 Pull Request CI 可显式使用非生产占位值检�
 常见 GitHub/AWS 令牌和私钥模式。`tools/verify-build.js` 另外确认密码引用、文章明文和
 引用名称没有进入 HTML、Atom 或搜索索引。
 
+部署后，npm 的 `postdeploy` 生命周期自动调用 `tools/smoke-live.js`。检查器允许 Pages
+在有限重试窗口内完成 legacy build，然后同时核验首页、Sitemap、Atom、robots、加密文章、
+旧 URL canonical 跳转，以及线上 `build-info.json` 是否等于当前源码提交。HTTP 200
+但 SHA 尚未更新只表示旧站仍可访问，不会被误判为部署完成。
+
 `.github/workflows/ci.yml` 在 push/PR 上运行锁定依赖构建，PR 另外运行 dependency
 review。公开源码仓库为 `threeyang3/hexo-blog-source`，其中已配置文章密码对应的
 Repository Secret；GitHub Pages artifact 部署仍未启用，当前发布仍由受保护的

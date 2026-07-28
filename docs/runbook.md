@@ -92,8 +92,8 @@ npm run deploy
 ```
 
 该命令会先自动执行完整检查，再使用 `_config.yml` 中固定的仓库和
-`master` 分支部署。不要直接使用 `hexo deploy`、`hexo d` 或
-`hexo deploy -g`。
+`master` 分支部署，最后自动等待 Pages 更新并运行线上健康检查。不要直接使用
+`hexo deploy`、`hexo d` 或 `hexo deploy -g`。
 
 部署后在 GUI 中运行“线上健康检查”，或执行：
 
@@ -101,9 +101,11 @@ npm run deploy
 npm run smoke:live
 ```
 
-该检查只读取线上首页、Sitemap、Atom、robots 和加密文章，不会修改 Pages 设置。
-2026-07-27 的维护没有执行部署，因此新生成的 Sitemap、Feed 和 build-info 在首次
-安全部署前不会出现在公网。
+该检查只读取线上首页、Sitemap、Atom、robots、加密文章、旧文章跳转和
+`build-info.json`，不会修改 Pages 设置。默认最多尝试 12 次、间隔 10 秒；只有
+`build-info.json` 的 `commit` 与当前源码 `HEAD` 相同才通过。排障时可临时设置
+`BLOG_SMOKE_ATTEMPTS`、`BLOG_SMOKE_DELAY_MS`、`BLOG_LIVE_URL` 或
+`BLOG_EXPECTED_COMMIT`，不要把真实文章密码放入这些变量。
 
 ## 配置变更规则
 
