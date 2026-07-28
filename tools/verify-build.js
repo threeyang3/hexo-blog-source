@@ -54,6 +54,8 @@ assert(indexHtml.includes('/search.xml'), 'Local search is not connected to the 
 assert(!indexHtml.includes('v1.hitokoto.cn'), 'Hitokoto external request leaked into the homepage')
 assert(!indexHtml.includes('busuanzi'), 'Busuanzi script leaked into the homepage')
 assert(!indexHtml.includes('canvas_nest'), 'Canvas-nest script leaked into the homepage')
+assert(indexHtml.includes('今日事，今日毕'), 'Homepage subtitle text is missing or incorrectly encoded')
+assert(!indexHtml.includes('今日事&#44;今日毕'), 'Homepage subtitle leaked an HTML entity into JavaScript')
 assert(mergedPostRedirect.includes('url=/posts/586a/'), 'Merged article redirect does not target /posts/586a/')
 assert(
   mergedPostRedirect.includes('href="https://threeyang.top/posts/586a/"'),

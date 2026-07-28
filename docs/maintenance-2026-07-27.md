@@ -144,6 +144,8 @@
   `build-info.json` 全部通过，线上源码 SHA 为 `abf44a1`。
 - 部署前发现旧 URL 页面被主题布局附加第二个 canonical；已设置 `layout: false`，并新增
   “只能有一个 canonical”的构建阻断规则。
+- 修复首页副标题把 `&#44;` 当作纯文本显示的问题：配置改用中文逗号
+  `今日事，今日毕`，构建检查同时要求正确文本存在且旧实体不存在。
 - GitHub Pages 仍为 `master` 根目录的 legacy build，Custom domain 仍为
   `threeyang.top`，HTTPS 强制开启；本次没有修改任何 Pages 设置。
 

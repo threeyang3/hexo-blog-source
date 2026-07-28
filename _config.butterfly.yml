@@ -82,7 +82,7 @@ subtitle:
   effect: false
   source: false
   sub:
-    - 今日事&#44;今日毕
+    - '今日事，今日毕'
     - Never put off till tomorrow what you can do today
 
 index_layout: 3
