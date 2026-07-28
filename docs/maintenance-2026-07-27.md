@@ -130,6 +130,8 @@
   明文没有进入文档、Actions YAML 或 Git 历史。
 - 首次推送使用当前净化文件树生成的无父根提交。含旧明文密码的历史仅留在本地恢复引用，
   不向任何远端推送。
+- 首次远端 CI 暴露 `.gitignore` 的 `public/` 规则同时忽略了 `admin/public/`；现已改为
+  只忽略根目录 `/public/`，GUI 前端静态文件已纳入源码，修复后的完整 CI 通过。
 - 源码 CI 已启用；Pages artifact 工作流仍只是模板，本次没有部署网站，也没有修改
   Pages Source、Custom domain 或 environment。
 
