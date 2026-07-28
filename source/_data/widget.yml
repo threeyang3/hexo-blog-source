@@ -1,0 +1,9 @@
+top:
+  - class_name: article
+    id_name: article
+    name: 了解作者
+    icon: fas fa-user
+    html: 
+      <p><a href="https://threeyang.top/posts/2a0d/">二十岁生日随笔</a></p>
+      <p><a href="https://threeyang.top/posts/f938/">关于写作和理想</a></p>
+      <p><a href="https://threeyang.top/posts/b258/">三观的变化</a></p>

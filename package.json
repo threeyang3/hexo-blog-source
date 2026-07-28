@@ -1,0 +1,50 @@
+{
+  "name": "hexo-site",
+  "version": "0.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.23.1 <23"
+  },
+  "scripts": {
+    "build": "hexo generate",
+    "check": "npm run verify:source && npm run verify:content && npm run clean && npm run build -- --bail && npm run verify && npm run verify:performance",
+    "clean": "hexo clean",
+    "deploy": "hexo deploy",
+    "gui": "node admin/server.js",
+    "predeploy": "npm run check",
+    "server": "hexo server",
+    "smoke:live": "node tools/smoke-live.js",
+    "test:gui": "node tools/test-admin.js && node tools/test-editorial-workflow.js",
+    "verify": "node tools/verify-build.js",
+    "verify:content": "node tools/verify-content.js",
+    "verify:performance": "node tools/verify-performance.js",
+    "verify:source": "node tools/verify-source-privacy.js"
+  },
+  "hexo": {
+    "version": "8.1.2"
+  },
+  "overrides": {
+    "brace-expansion": "5.0.8"
+  },
+  "dependencies": {
+    "hexo": "^8.1.2",
+    "hexo-abbrlink": "^2.2.1",
+    "hexo-backlink": "^0.1.4",
+    "hexo-blog-encrypt": "^4.0.2",
+    "hexo-deployer-git": "^4.0.0",
+    "hexo-douban": "^2.3.6",
+    "hexo-generator-archive": "^2.0.0",
+    "hexo-generator-category": "^2.0.0",
+    "hexo-generator-feed": "^4.0.0",
+    "hexo-generator-index": "^4.0.0",
+    "hexo-generator-searchdb": "^1.5.0",
+    "hexo-generator-sitemap": "^3.0.1",
+    "hexo-generator-tag": "^2.0.0",
+    "hexo-renderer-marked": "^7.0.1",
+    "hexo-renderer-pug": "^3.0.0",
+    "hexo-renderer-stylus": "^3.0.1",
+    "hexo-server": "^3.0.0",
+    "hexo-theme-butterfly": "^5.6.1",
+    "hexo-wordcount": "^6.0.1"
+  }
+}

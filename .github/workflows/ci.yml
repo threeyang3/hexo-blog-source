@@ -1,0 +1,46 @@
+name: Validate Hexo site
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-review:
+    if: ${{ github.event_name == 'pull_request' && github.event.repository.private == false }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+
+      - name: Review dependency changes
+        uses: actions/dependency-review-action@v5
+
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      BLOG_ENCRYPTION_PASSWORD_C57A: ${{ secrets.BLOG_ENCRYPTION_PASSWORD_C57A }}
+      BLOG_ALLOW_PLACEHOLDER_ENCRYPTION: ${{ github.event_name == 'pull_request' }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+
+      - name: Use Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Test local content workbench
+        run: npm run test:gui
+
+      - name: Build and verify
+        run: npm run check

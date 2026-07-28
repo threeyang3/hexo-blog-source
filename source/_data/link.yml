@@ -1,0 +1,33 @@
+- class_name: 网站
+  class_desc: 值得推荐的网站
+  link_list:
+    - name: Mox.moe
+      link: https://vol.moe/
+      avatar: https://vol.moe/favicon.ico
+      descr: 免费的漫画下载平台，适合kindle
+    - name: 古诗文网
+      link: https://www.gushiwen.cn/
+      avatar: https://gimg2.baidu.com/image_search/src=http%3A%2F%2Fis2-ssl.mzstatic.com%2Fimage%2Fthumb%2FPurple123%2Fv4%2F97%2F06%2F5a%2F97065a48-850b-29db-f99e-b0e43322e83b%2FAppIcon-0-1x_U007emarketing-0-7-0-0-85-220.png%2F320x0w.png&refer=http%3A%2F%2Fis2-ssl.mzstatic.com&app=2002&size=f9999,10000&q=a80&n=0&g=0n&fmt=auto?sec=1659666658&t=7eeacbc818e7c055a7e2ed22eefa3e73
+      descr: 诗词
+    - name: Pexels
+      link: https://www.pexels.com/zh-cn/
+      avatar: https://img.thosefree.com/wp-content/uploads/2020/04/pexels-cover.jpg&720x405.jpg
+      descr: 免费的图片素材网站
+- class_name: 写作
+  class_desc: 喜欢的作家、写作知识
+  link_list:
+    - name: 愤怒的香蕉
+      link: https://www.zhihu.com/people/fen-nu-de-xiang-jiao-82
+      avatar: https://pic1.zhimg.com/v2-abed1a8c04700ba7d72b45195223e0ff_xl.jpg?source=32738c0c
+      descr: 一个非常认真的网文作家
+- class_name: 技术
+  class_desc: Supported By
+  link_list:
+    - name: Hexo
+      link: https://hexo.io/zh-tw/
+      avatar: https://d33wubrfki0l68.cloudfront.net/6657ba50e702d84afb32fe846bed54fba1a77add/827ae/logo.svg
+      descr: 快速、简单且强大的网誌框架
+    - name: Butterfly
+      link: https://github.com/jerryc127/hexo-theme-butterfly
+      avatar: https://butterfly.js.org/img/avatar.png
+      descr: 本博客所使用的主题

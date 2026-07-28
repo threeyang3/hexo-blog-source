@@ -1,0 +1,80 @@
+# Copy this file to .github/workflows/pages.yml only after:
+# 1. the source repository has an origin remote;
+# 2. GitHub Pages "Source" is set to GitHub Actions;
+# 3. the custom domain remains threeyang.top;
+# 4. the github-pages environment protection rules are reviewed.
+name: Protected GitHub Pages deployment
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      BLOG_ENCRYPTION_PASSWORD_C57A: ${{ secrets.BLOG_ENCRYPTION_PASSWORD_C57A }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.23.1
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Test the local content workbench
+        run: npm run test:gui
+
+      - name: Build and verify the site
+        run: npm run check
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload verified site artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy GitHub Pages artifact
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  smoke:
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out smoke-test script
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.23.1
+
+      - name: Verify the live site
+        run: node tools/smoke-live.js

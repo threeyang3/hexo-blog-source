@@ -1,0 +1,19 @@
+{
+  "documents": {
+    "public/index.html": 81920,
+    "public/books/index.html": 512000,
+    "public/movies/index.html": 665600
+  },
+  "homepage": {
+    "maxScripts": 11,
+    "maxExternalOrigins": 2
+  },
+  "assets": {
+    "source/img/bk1.webp": 409600,
+    "source/img/bk2.webp": 307200
+  },
+  "allowedExternalOrigins": [
+    "https://cdn.jsdelivr.net",
+    "https://minio.mythsman.com"
+  ]
+}
