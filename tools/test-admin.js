@@ -74,7 +74,35 @@ async function main() {
     assert.equal(actionDefinitions.check.args[0], process.env.npm_execpath);
   }
 
-  const server = createServer();
+  const sourceStatus = {
+    branch: 'main',
+    origin: 'https://github.com/threeyang3/hexo-blog-source.git',
+    originMatches: true,
+    head: 'a'.repeat(40),
+    shortHead: 'aaaaaaa',
+    remoteHead: 'a'.repeat(40),
+    ahead: 0,
+    behind: 0,
+    clean: true,
+    changes: [],
+    managedChanges: [],
+    blockedChanges: [],
+    ci: { state: 'success', label: 'success' },
+    readyForDeploy: true,
+    blockers: [],
+  };
+  const sourceControl = {
+    getStatus: async () => sourceStatus,
+    sync: async (body, onLog) => {
+      assert.equal(body.confirmation, 'SYNC SOURCE');
+      assert.deepEqual(body.paths, ['source/_posts/example.md']);
+      onLog('system', 'mock source sync');
+      return { committedHead: sourceStatus.head, status: sourceStatus };
+    },
+    pushPending: async () => ({ status: sourceStatus }),
+    assertDeployReady: async () => sourceStatus,
+  };
+  const server = createServer({ sourceControl });
   server.listen(0, '127.0.0.1');
   await once(server, 'listening');
   const baseUrl = `http://127.0.0.1:${server.address().port}`;
@@ -99,6 +127,40 @@ async function main() {
     assert.equal(typeof status.body.contentHealth.drafts, 'number');
     assert.ok(Array.isArray(status.body.actions));
     assert.ok(status.body.actions.some((action) => action.id === 'deploy'));
+
+    const source = await request(baseUrl, '/api/source-status?refresh=1', {
+      headers: { 'X-Blog-Admin-Token': TOKEN },
+    });
+    assert.equal(source.response.status, 200);
+    assert.equal(source.body.status.readyForDeploy, true);
+    assert.equal(source.body.status.ci.state, 'success');
+
+    const sourceSync = await request(baseUrl, '/api/source-sync', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Blog-Admin-Token': TOKEN,
+        Origin: baseUrl,
+      },
+      body: JSON.stringify({
+        confirmation: 'SYNC SOURCE',
+        message: 'content: example',
+        paths: ['source/_posts/example.md'],
+      }),
+    });
+    assert.equal(sourceSync.response.status, 200);
+    assert.equal(sourceSync.body.committedHead, sourceStatus.head);
+
+    const foreignSourceSync = await request(baseUrl, '/api/source-sync', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Blog-Admin-Token': TOKEN,
+        Origin: 'https://example.com',
+      },
+      body: '{}',
+    });
+    assert.equal(foreignSourceSync.response.status, 403);
 
     const posts = await request(baseUrl, '/api/posts', {
       headers: { 'X-Blog-Admin-Token': TOKEN },
@@ -225,10 +287,14 @@ async function main() {
 
     const portBlocker = net.createServer();
     let blockerListening = false;
+    let previewPortUnavailable = false;
     try {
       await new Promise((resolve, reject) => {
         portBlocker.once('error', (error) => {
-          if (error.code === 'EADDRINUSE') resolve();
+          if (error.code === 'EADDRINUSE' || error.code === 'EACCES') {
+            previewPortUnavailable = true;
+            resolve();
+          }
           else reject(error);
         });
         portBlocker.listen(5000, '127.0.0.1', () => {
@@ -236,17 +302,19 @@ async function main() {
           resolve();
         });
       });
-      const occupiedPreview = await request(baseUrl, '/api/preview/start', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Blog-Admin-Token': TOKEN,
-          Origin: baseUrl,
-        },
-        body: '{}',
-      });
-      assert.equal(occupiedPreview.response.status, 409);
-      assert.match(occupiedPreview.body.error, /5000 端口已被其他程序占用/);
+      if (blockerListening || !previewPortUnavailable) {
+        const occupiedPreview = await request(baseUrl, '/api/preview/start', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Blog-Admin-Token': TOKEN,
+            Origin: baseUrl,
+          },
+          body: '{}',
+        });
+        assert.equal(occupiedPreview.response.status, 409);
+        assert.match(occupiedPreview.body.error, /5000 端口已被其他程序占用/);
+      }
     } finally {
       if (blockerListening) {
         portBlocker.close();

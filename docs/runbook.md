@@ -81,17 +81,31 @@ git status --short
 
 ## 部署
 
-GUI 中点击“准备部署”，人工输入 `DEPLOY threeyang.top` 后才会执行部署。
-点击前先查看“发布清单”；若“受保护配置”不为空，逐项核对 `_config.yml`、
-`_config.butterfly.yml`、`source/CNAME`、依赖和工作流改动。发布清单是只读的，
-不会自动提交或推送。
+GUI 发布页先完成“源码检查点”：
+
+1. 勾选本次要提交的文章、草稿、素材、媒体元数据或受管外观配置。
+2. 填写 5–100 字符的单行提交说明。
+3. 输入 `SYNC SOURCE`。后端刷新并核对固定的 `origin/main`，运行 `npm run check`，
+   只提交勾选路径并推送到公开源码仓库。
+4. 等待当前源码 SHA 对应的 GitHub Actions 显示“已通过”。
+5. 确认工作区清洁、本地与远端无 ahead/behind 后，“准备部署”才会解锁。
+6. 输入 `DEPLOY threeyang.top`，执行受保护 Pages 部署。
+
+工具、依赖、`_config.yml`、CNAME 和工作流变化不会被 GUI 提交；必须在命令行逐项审查并
+单独提交。若源码 commit 已创建但 push 失败，刷新发布页后使用“继续推送已有提交”，不要
+重复创建提交。若本地落后 `origin/main`，停止 GUI 操作并人工合并。
+
+点击部署前仍要查看“发布清单”；若“受保护配置”不为空，逐项核对 `_config.yml`、
+`_config.butterfly.yml`、`source/CNAME`、依赖和工作流改动。
 命令行方式仍为：
 
 ```bash
 npm run deploy
 ```
 
-该命令会先自动执行完整检查，再使用 `_config.yml` 中固定的仓库和
+该命令会先运行 `tools/verify-source-sync.js`：确认当前分支为 `main`、origin 是固定
+公开源码仓库、工作区清洁、本地与远端 SHA 相同且当前提交 CI 通过。随后再执行完整检查，
+使用 `_config.yml` 中固定的仓库和
 `master` 分支部署，最后自动等待 Pages 更新并运行线上健康检查。不要直接使用
 `hexo deploy`、`hexo d` 或 `hexo deploy -g`。
 
@@ -192,3 +206,12 @@ GitHub Pages 发布源之前，不要新增第二套自动部署；当前唯一�
 
 启用后先完成至少两到三次人工触发、构建、审批、部署和 smoke test，再评估是否退役
 本地 `hexo-deployer-git`。两条路径不得同时自动运行。
+
+### 源码发布门禁排障
+
+- `origin` 不一致：运行 `git remote -v` 核对，不要让 GUI 自动改写 remote。
+- 本地落后远端：先 `git fetch origin main`，查看差异并人工合并；禁止强推。
+- 有非受管变化：在命令行逐项审查、测试、提交或恢复，GUI 不会替你处理。
+- CI 缺失或失败：打开公开源码仓库对应 commit 的 Actions 日志，修复后重新提交。
+- GitHub API 暂时不可用：稍后刷新；门禁会保持锁定，不应改用 `hexo deploy` 绕过。
+- push 失败且本地 ahead：使用 GUI“继续推送已有提交”或人工执行等价的固定分支推送。

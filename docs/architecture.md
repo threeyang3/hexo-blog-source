@@ -3,7 +3,13 @@
 ## 发布链路
 
 ```text
-source/ + scaffolds/
+GUI 受管内容变化
+        │ 明确勾选 + SYNC SOURCE
+        ▼
+hexo-blog-source:main
+        │ GitHub Actions / npm run check
+        ▼
+已验证源码 commit
         │
         ├── _config.yml
         ├── _config.butterfly.yml
@@ -44,7 +50,14 @@ admin/server.js
            │   ├── npm audit / outdated / smoke:live
            │   ├── git status
            │   ├── 发布差异与内容治理只读报告
+           │   ├── 受管源码选择 → check → commit → origin/main
+           │   ├── 当前 HEAD 对应 GitHub Actions 状态
            │   └── Hexo preview --draft（localhost:5000）
+           ├── admin/source-control.js
+           │   ├── 固定源码 origin 与 main 分支
+           │   ├── 明确路径清单，禁止 git add .
+           │   ├── ahead / behind / remote SHA 校验
+           │   └── CI 成功后解锁 Pages 部署
            └── admin/content-store.js
                ├── source/_posts/*.md（已发布）
                ├── source/_drafts/*.md（草稿/待发布）
@@ -94,13 +107,17 @@ API 只供同源前端使用：
 | `/api/media/file/:id` | GET | 预览素材库中的本地图片 |
 | `/api/health` | GET | 读取内容治理问题队列 |
 | `/api/release-report` | GET | 读取文章、素材、配置和基础设施变更清单 |
+| `/api/source-status` | GET | 读取源码变化、远端同步、当前提交 CI 与部署门禁 |
+| `/api/source-sync` | POST | 完整检查后提交并推送明确选择的受管路径 |
+| `/api/source-push` | POST | 继续推送已创建但尚未到达远端的本地提交 |
 | `/api/visuals` | GET / PUT | 读取或保存四个 Butterfly 视觉字段 |
 | `/api/actions/:id` | POST | 执行命令白名单中的动作 |
 | `/api/preview/start` | POST | 启动 5000 端口的 Hexo 预览 |
 | `/api/preview/stop` | POST | 停止由控制台启动的预览 |
 
 API 必须携带每次启动随机生成的令牌。修改类请求还校验 Origin；部署 action
-额外要求完整确认短语，外观保存要求 `SAVE VISUALS`。服务固定绑定
+额外要求完整确认短语，源码同步要求 `SYNC SOURCE`，外观保存要求 `SAVE VISUALS`。
+源码提交说明与路径都作为独立进程参数传递，Git 和 npm 始终使用 `shell: false`。服务固定绑定
 `127.0.0.1`，不能作为远程管理面板使用。
 
 ## 配置所有权
@@ -188,7 +205,9 @@ secret 会失败；只有 Pull Request CI 可显式使用非生产占位值检�
 `.github/workflows/ci.yml` 在 push/PR 上运行锁定依赖构建，PR 另外运行 dependency
 review。公开源码仓库为 `threeyang3/hexo-blog-source`，其中已配置文章密码对应的
 Repository Secret；GitHub Pages artifact 部署仍未启用，当前发布仍由受保护的
-`npm run deploy` 完成。未来工作流只提供在
+`npm run deploy` 完成。`admin/source-control.js` 通过公开 GitHub Actions API 查询
+当前 HEAD 的运行结果；状态缺失、失败或 API 不可用都保持部署锁定。
+`tools/verify-source-sync.js` 在命令行 `predeploy` 中执行同一门禁。未来工作流只提供在
 `docs/templates/pages-artifact.yml`，满足模板顶部四项前置条件后才能人工启用。
 
 ## 加密文章

@@ -29,10 +29,13 @@
 - `admin/server.js`：仅监听本机的 GUI 服务、API 与命令白名单。
 - `admin/content-store.js`：文章/素材读写、并发哈希、路径边界与主题视觉白名单。
 - `admin/release-report.js`：只读发布清单和受保护配置变更分组。
+- `admin/source-control.js`：受管源码提交、固定远端推送、CI 查询和部署门禁。
 - `admin/public/`：无构建步骤的 Blog Control Room 前端。
 - `scripts/build-info.js`：生成 `public/build-info.json`。
 - `scripts/encryption-secrets.js`：在文章渲染前从环境变量或本机忽略文件注入加密密码。
 - `tools/test-admin.js`：GUI 的 API 与安全边界测试。
+- `tools/test-source-control.js`：隔离 Git 仓库中的源码路径、提交与续推安全测试。
+- `tools/verify-source-sync.js`：命令行部署前的源码远端与 CI 门禁。
 - `tools/test-editorial-workflow.js`：隔离目录中的状态、历史、差异与恢复测试。
 - `tools/verify-performance.js`：生成结果的体积、脚本和第三方来源预算。
 - `tools/verify-source-privacy.js`：公开源码的明文密码、令牌和私钥扫描。
@@ -72,6 +75,11 @@
     保存在不推送的本地恢复标签中。
 18. `postdeploy` 必须保留 `npm run smoke:live`；线上 `build-info.json` 的源码 SHA
     未与当前提交一致时，部署不能视为完成。
+19. GUI 源码同步只允许用户明确勾选 `source/_posts/`、`source/_drafts/`、
+    `source/img/`、`source/picture/`、`source/_data/media.json` 和
+    `_config.butterfly.yml`；禁止 `git add .`，并要求 `SYNC SOURCE`。
+20. 部署前必须确认本地 `main`、固定源码 `origin`、远端 SHA、清洁工作区和当前提交
+    GitHub Actions 全部对齐。GUI 与命令行不得绕过 `tools/verify-source-sync.js`。
 
 ## 常用命令
 

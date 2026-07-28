@@ -277,6 +277,36 @@
             <div class="job-chip" id="jobLabel">CONTROL ROOM / READY</div>
           </div>
 
+          <article class="source-checkpoint">
+            <div class="source-checkpoint__head">
+              <div><p class="eyebrow">SOURCE CHECKPOINT</p><h3>源码先归档，部署才解锁</h3><p>只提交文章、素材和 GUI 管理的外观配置；工具、依赖和核心配置必须留给人工审查。</p></div>
+              <button class="text-link" id="refreshSourceStatus" type="button">刷新远端与 CI →</button>
+            </div>
+            <div class="release-lane" aria-label="发布流程">
+              <div class="release-lane__step" data-source-step="local"><span>01</span><strong>LOCAL</strong><small>选择受管变化</small></div>
+              <i>→</i>
+              <div class="release-lane__step" data-source-step="remote"><span>02</span><strong>SOURCE</strong><small>推送公开源码</small></div>
+              <i>→</i>
+              <div class="release-lane__step" data-source-step="ci"><span>03</span><strong>CI</strong><small>GitHub Actions</small></div>
+              <i>→</i>
+              <div class="release-lane__step" data-source-step="deploy"><span>04</span><strong>PAGES</strong><small>部署线上网站</small></div>
+            </div>
+            <div class="source-metrics" id="sourceMetrics"><p class="empty-note">正在核对源码仓库…</p></div>
+            <div class="source-workbench">
+              <div>
+                <div class="source-workbench__title"><strong>本次源码清单</strong><small id="sourceSelectionCount">0 项已选择</small></div>
+                <div class="source-change-list" id="sourceChangeList"><p class="empty-note">正在读取变化…</p></div>
+              </div>
+              <div class="source-actions">
+                <label for="sourceCommitMessage">提交说明</label>
+                <input id="sourceCommitMessage" maxlength="100" value="content: update blog content" autocomplete="off">
+                <p id="sourceGuardNote">正在计算发布门禁…</p>
+                <button class="ink-button" id="sourceSyncButton" type="button">检查并同步源码</button>
+                <button class="outline-button is-hidden" id="sourcePushButton" type="button">继续推送已有提交</button>
+              </div>
+            </div>
+          </article>
+
           <article class="release-report">
             <div class="panel-heading">
               <div><p class="eyebrow">RELEASE MANIFEST</p><h3>本次发布会改变什么</h3></div>
@@ -299,7 +329,7 @@
 
           <article class="deploy-card">
             <span class="live-stamp">LIVE</span>
-            <div><p class="eyebrow">PROTECTED RELEASE</p><h3>部署到 GitHub Pages</h3><p>部署前自动执行完整检查。CNAME、仓库、分支、主题或加密文章保护失败时不会发布。</p></div>
+            <div><p class="eyebrow">PROTECTED RELEASE</p><h3>部署到 GitHub Pages</h3><p id="deployGuardText">正在核对源码提交、远端同步与 CI 状态；全部通过后才会解锁部署。</p></div>
             <button class="danger-button" id="deployButton" type="button">准备部署</button>
           </article>
 
@@ -388,6 +418,18 @@
         <label for="deployConfirmation">输入 <code>DEPLOY threeyang.top</code></label>
         <input id="deployConfirmation" autocomplete="off" spellcheck="false">
         <div class="dialog-actions"><button class="outline-button" value="cancel">取消</button><button class="danger-button" id="confirmDeployButton" value="default">确认并部署</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="sourceDialog" aria-labelledby="sourceDialogTitle">
+      <form method="dialog">
+        <button class="dialog-close" value="cancel" aria-label="关闭">×</button>
+        <p class="eyebrow">SOURCE CHECKPOINT</p>
+        <h2 id="sourceDialogTitle">检查、提交并推送源码</h2>
+        <p id="sourceDialogDescription">系统会先运行完整检查，再只提交你勾选的受管文件并推送到公开源码仓库。不会执行 <code>git add .</code>。</p>
+        <label for="sourceConfirmation">输入 <code>SYNC SOURCE</code></label>
+        <input id="sourceConfirmation" autocomplete="off" spellcheck="false">
+        <div class="dialog-actions"><button class="outline-button" value="cancel">取消</button><button class="ink-button" id="confirmSourceButton" value="default">确认同步</button></div>
       </form>
     </dialog>
 

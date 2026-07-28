@@ -122,10 +122,10 @@ hexo --debug
     "deploy": "hexo deploy",
     "gui": "node admin/server.js",
     "postdeploy": "npm run smoke:live",
-    "predeploy": "npm run check",
+    "predeploy": "node tools/verify-source-sync.js && npm run check",
     "server": "hexo server",
     "smoke:live": "node tools/smoke-live.js",
-    "test:gui": "node tools/test-admin.js && node tools/test-editorial-workflow.js",
+    "test:gui": "node tools/test-source-control.js && node tools/test-admin.js && node tools/test-editorial-workflow.js",
     "verify": "node tools/verify-build.js",
     "verify:content": "node tools/verify-content.js",
     "verify:performance": "node tools/verify-performance.js",
@@ -405,6 +405,12 @@ https://blog.com/posts/2a0d/
    - 监听文件变化
    - 更新文章列表
    - 显示发布状态
+
+5. **源码发布门禁**
+   - 只能提交用户明确选择的文章、草稿、素材、媒体元数据和受管视觉配置。
+   - 禁止 `git add .`；提交信息作为独立参数传入，不拼接 Shell。
+   - 固定核对 `origin`、`main`、ahead/behind 和远端 SHA。
+   - 当前源码提交的 GitHub Actions 未通过时，不允许进入 Pages 部署。
 
 ### 6.5 与内置内容工作台协作
 

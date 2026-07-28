@@ -95,7 +95,13 @@ alt、宽高与用途记录在 `source/_data/media.json`。
 ### 发布
 
 - 发布清单：只读汇总文章、素材、受保护配置和基础设施改动，并列出已发布文章 URL。
-- 受保护配置有变化时会醒目标记；清单不执行 Git add、commit、push 或部署。
+- “源码检查点”把发布拆为 LOCAL → SOURCE → CI → PAGES 四段。
+- 受管文章、草稿、素材、媒体元数据和四字段外观配置可以逐项勾选；工具、依赖、
+  `_config.yml`、CNAME 和其他基础设施变化只显示为“人工审查”，GUI 不会提交。
+- 输入提交说明与 `SYNC SOURCE` 后，后端先刷新 `origin/main`、拒绝落后分支，
+  运行 `npm run check`，再只提交勾选路径并推送。不会执行 `git add .`。
+- 推送中断但本地提交已经创建时，“继续推送已有提交”可恢复，不会重新提交文件。
+- 当前 HEAD 对应的 GitHub Actions 通过、远端 SHA 对齐且工作区清洁后，Pages 部署才解锁。
 - 完整检查：内容校验、清理、生成和部署保护验证。
 - 性能预算：校验代表页面体积、首页脚本数和运行时第三方来源。
 - 生成站点：仅构建 `public/`。
@@ -117,6 +123,8 @@ alt、宽高与用途记录在 `source/_data/media.json`。
 6. 文章保存使用 SHA-256 乐观锁，避免覆盖其他编辑器产生的新版本。
 7. 后端不会向页面返回文章密码、Git 凭据或环境变量。
 8. 部署保留 `predeploy → npm run check`，外观和部署分别使用独立确认短语。
+9. 源码同步固定要求受信任的公开源码 origin 和 `main`，路径与提交说明均由后端验证；
+   CI 查询失败时采用“保持锁定”策略。
 
 ## API 速查
 
@@ -134,6 +142,9 @@ alt、宽高与用途记录在 `source/_data/media.json`。
 | `/api/media/file/:id` | GET | 读取本地素材缩略图 |
 | `/api/health` | GET | 内容治理队列 |
 | `/api/release-report` | GET | 发布前差异清单 |
+| `/api/source-status` | GET | 源码、远端、CI 与部署门禁 |
+| `/api/source-sync` | POST | 受限提交并推送勾选的源码路径 |
+| `/api/source-push` | POST | 继续推送已有本地提交 |
 | `/api/visuals` | GET / PUT | 读取 / 保存受保护视觉配置 |
 | `/api/actions/:id` | POST | 执行固定维护动作 |
 | `/api/preview/start` | POST | 启动 Hexo 预览 |
@@ -148,7 +159,8 @@ npm run test:gui
 npm run check
 ```
 
-`tools/test-admin.js` 覆盖静态页面、安全响应头、令牌、Origin、路径穿越、文章读取、
+`tools/test-source-control.js` 在隔离 Git 仓库覆盖路径白名单、目录穿越、选择性提交、
+非受管文件保留和续推。`tools/test-admin.js` 覆盖静态页面、安全响应头、令牌、Origin、路径穿越、文章读取、
 并发写入拒绝、素材读取、视觉配置确认和部署确认。
 `tools/test-editorial-workflow.js` 在隔离临时仓库验证草稿 → 待发布 → 已发布、版本差异和
 恢复。2026-07-27 的桌面与移动端无头浏览器验收还覆盖文章状态/历史、真实主题预览、
@@ -164,4 +176,9 @@ npm run check
 - 外观保存失败：重新打开外观页获取配置，确认只使用站内路径、HTTP(S) URL 或 CSS 渐变。
 - 预览无法启动：先执行 `npm ci`，确认本地 Hexo 依赖存在。
 - 加密文章预览提示缺少 secret：从模板创建 `.blog-admin/secrets.json` 并填写本机密码。
+- 源码同步提示“本地落后远端”：停止 GUI 同步，先人工检查并合并 `origin/main`。
+- 源码同步检查通过但推送失败：不要重复编辑或手工重写提交，刷新后使用“继续推送已有提交”。
+- CI 一直“等待触发”：在公开源码仓库 Actions 页检查工作流是否被禁用；不要绕过门禁部署。
+- CI 状态“不可用”：检查网络或 GitHub API 限额，稍后点击“刷新远端与 CI”。
+- 基础设施变化被锁定：在命令行逐项审查并单独提交，GUI 只负责内容与受管视觉路径。
 - 部署失败：按 `docs/runbook.md` 排查，不要绕过 `npm run deploy`。

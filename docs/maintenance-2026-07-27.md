@@ -155,3 +155,15 @@
    和 `github-pages` environment，避免两条路径同时自动运行。
 2. 从治理队列逐步补充摘要和封面。
 3. 有 Search Console 数据后，再按真实曝光与索引问题排序旧文更新。
+
+## 2026-07-28 GUI 源码发布闭环
+
+- 发布页新增 LOCAL → SOURCE → CI → PAGES 源码检查点。
+- GUI 只允许选择文章、草稿、素材、媒体元数据和四字段视觉配置；基础设施变化继续要求
+  命令行人工审查，提交实现明确禁止 `git add .`。
+- 同步前固定核对公开源码 origin、`main`、ahead/behind，并运行完整 `npm run check`；
+  提交说明作为独立参数传递，Git/npm 均保持 `shell: false`。
+- 推送失败后可续推已存在的本地提交，不会重复提交或自动强推。
+- 通过 GitHub 公开 Actions API 核对当前 HEAD；CI 缺失、失败或不可用时 Pages 部署锁定。
+- `predeploy` 新增 `tools/verify-source-sync.js`，因此 GUI 与命令行部署使用同一门禁。
+- 新增隔离 Git 安全测试，验证路径穿越、非受管文件隔离、选择性提交和续推。

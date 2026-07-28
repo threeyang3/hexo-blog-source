@@ -91,6 +91,20 @@ const elements = {
   refreshReleaseReport: $('#refreshReleaseReport'),
   releaseSummary: $('#releaseSummary'),
   releaseGroups: $('#releaseGroups'),
+  refreshSourceStatus: $('#refreshSourceStatus'),
+  sourceMetrics: $('#sourceMetrics'),
+  sourceChangeList: $('#sourceChangeList'),
+  sourceSelectionCount: $('#sourceSelectionCount'),
+  sourceCommitMessage: $('#sourceCommitMessage'),
+  sourceGuardNote: $('#sourceGuardNote'),
+  sourceSyncButton: $('#sourceSyncButton'),
+  sourcePushButton: $('#sourcePushButton'),
+  sourceDialog: $('#sourceDialog'),
+  sourceDialogTitle: $('#sourceDialogTitle'),
+  sourceDialogDescription: $('#sourceDialogDescription'),
+  sourceConfirmation: $('#sourceConfirmation'),
+  confirmSource: $('#confirmSourceButton'),
+  deployGuardText: $('#deployGuardText'),
   historyDialog: $('#historyDialog'),
   historyList: $('#historyList'),
   historyDiff: $('#historyDiff'),
@@ -123,6 +137,8 @@ const state = {
   health: null,
   healthFilter: 'all',
   releaseReport: null,
+  sourceStatus: null,
+  sourceOperation: 'sync',
   currentPost: null,
   isNewPost: false,
   dirty: false,
@@ -165,6 +181,7 @@ function setConnection(online, label) {
 
 function switchView(name, { updateHash = true } = {}) {
   if (!viewMeta[name]) name = 'dashboard';
+  if (name !== 'operations') window.clearTimeout(sourcePollTimer);
   $$('.view').forEach((view) => view.classList.toggle('is-active', view.dataset.page === name));
   $$('.nav-item').forEach((item) => item.classList.toggle('is-active', item.dataset.view === name));
   [elements.viewEyebrow.textContent, elements.viewTitle.textContent] = viewMeta[name];
@@ -173,7 +190,10 @@ function switchView(name, { updateHash = true } = {}) {
   if (name === 'media') loadMedia();
   if (name === 'appearance') loadVisuals();
   if (name === 'health') loadHealth();
-  if (name === 'operations') loadReleaseReport();
+  if (name === 'operations') {
+    loadReleaseReport();
+    loadSourceStatus(true);
+  }
 }
 
 function renderStatus(status) {
@@ -194,7 +214,12 @@ function renderStatus(status) {
 
   const busy = Boolean(status.currentJob);
   for (const button of elements.commandButtons) button.disabled = busy;
-  elements.deployButton.disabled = busy;
+  elements.deployButton.disabled = busy || !state.sourceStatus?.readyForDeploy;
+  elements.sourceSyncButton.disabled = busy
+    || !state.sourceStatus
+    || state.sourceStatus.managedChanges.length === 0
+    || state.sourceStatus.ahead > 0;
+  elements.sourcePushButton.disabled = busy || !state.sourceStatus?.ahead;
   elements.jobLabel.textContent = busy
     ? `RUNNING / ${status.currentJob.label.toUpperCase()}`
     : status.lastJob
@@ -1030,6 +1055,171 @@ async function loadReleaseReport() {
   }
 }
 
+let sourcePollTimer = null;
+
+function sourceMetric(label, value, detail) {
+  const item = document.createElement('article');
+  item.innerHTML = '<span></span><strong></strong><small></small>';
+  item.querySelector('span').textContent = label;
+  item.querySelector('strong').textContent = value;
+  item.querySelector('small').textContent = detail;
+  return item;
+}
+
+function updateSourceSelectionCount() {
+  const selected = $$('[data-source-path]:checked').length;
+  elements.sourceSelectionCount.textContent = `${selected} 项已选择`;
+}
+
+function setLaneState(name, value) {
+  const step = $(`[data-source-step="${name}"]`);
+  step.classList.remove('is-success', 'is-current', 'is-failure');
+  if (value) step.classList.add(`is-${value}`);
+}
+
+function renderSourceStatus() {
+  const status = state.sourceStatus;
+  if (!status) return;
+  const remoteSynced = status.originMatches
+    && status.ahead === 0
+    && status.behind === 0
+    && status.remoteHead === status.head;
+  const ciLabel = {
+    success: '已通过',
+    pending: '运行中',
+    failure: '未通过',
+    missing: '等待触发',
+    unavailable: '不可用',
+  }[status.ci.state] || status.ci.label;
+  elements.sourceMetrics.replaceChildren(
+    sourceMetric('LOCAL / CHANGES', String(status.changes.length), `${status.branch} · ${status.shortHead}`),
+    sourceMetric('SOURCE / REMOTE', remoteSynced ? '已同步' : '未同步', `↑ ${status.ahead ?? '—'} · ↓ ${status.behind ?? '—'}`),
+    sourceMetric('ACTIONS / CI', ciLabel, status.ci.label),
+    sourceMetric('PAGES / GATE', status.readyForDeploy ? '已解锁' : '已锁定', `${status.blockers.length} 项门禁`),
+  );
+
+  const rows = status.changes.map((entry) => {
+    const row = document.createElement('label');
+    row.className = `source-change${entry.managed ? '' : ' is-locked'}`;
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = entry.managed;
+    checkbox.disabled = !entry.managed;
+    if (entry.managed) checkbox.dataset.sourcePath = entry.path;
+    checkbox.addEventListener('change', updateSourceSelectionCount);
+    const code = document.createElement('code');
+    code.textContent = entry.code.trim() || 'M';
+    const name = document.createElement('span');
+    name.textContent = entry.path;
+    const scope = document.createElement('small');
+    scope.textContent = entry.managed ? 'GUI 受管' : '人工审查';
+    row.append(checkbox, code, name, scope);
+    return row;
+  });
+  if (rows.length > 0) {
+    elements.sourceChangeList.replaceChildren(...rows);
+  } else {
+    const empty = document.createElement('p');
+    empty.className = 'empty-note';
+    empty.textContent = '工作区没有未提交变化。';
+    elements.sourceChangeList.replaceChildren(empty);
+  }
+  updateSourceSelectionCount();
+
+  setLaneState('local', status.clean ? 'success' : 'current');
+  setLaneState('remote', remoteSynced ? 'success' : (status.originMatches ? 'current' : 'failure'));
+  setLaneState('ci', status.ci.state === 'success' ? 'success' : status.ci.state === 'failure' ? 'failure' : 'current');
+  setLaneState('deploy', status.readyForDeploy ? 'success' : 'current');
+
+  elements.sourcePushButton.classList.toggle('is-hidden', !(status.ahead > 0 && status.behind === 0));
+  elements.sourceGuardNote.textContent = status.readyForDeploy
+    ? `当前源码 ${status.shortHead} 已推送且 CI 通过，可以进入 Pages 部署。`
+    : status.blockers.join('；');
+  elements.deployGuardText.textContent = status.readyForDeploy
+    ? `源码 ${status.shortHead} 已与 origin/main 对齐，当前提交 CI 已通过。部署仍会再次运行完整检查和线上冒烟测试。`
+    : `部署已锁定：${status.blockers.join('；')}`;
+  if (state.currentStatus) renderStatus(state.currentStatus);
+
+  window.clearTimeout(sourcePollTimer);
+  if (status.ci.state === 'pending' || status.ci.state === 'missing') {
+    sourcePollTimer = window.setTimeout(() => loadSourceStatus(false, true), 8000);
+  }
+}
+
+async function loadSourceStatus(refreshRemote = false, silent = false) {
+  try {
+    const response = await api(`/api/source-status${refreshRemote ? '?refresh=1' : ''}`);
+    state.sourceStatus = response.status;
+    renderSourceStatus();
+  } catch (error) {
+    elements.sourceGuardNote.textContent = error.message;
+    elements.deployGuardText.textContent = `部署已锁定：${error.message}`;
+    elements.deployButton.disabled = true;
+    if (!silent) showToast(error.message);
+  }
+}
+
+function openSourceDialog(operation) {
+  state.sourceOperation = operation;
+  const isPush = operation === 'push';
+  if (!isPush) {
+    const paths = $$('[data-source-path]:checked').map((input) => input.dataset.sourcePath);
+    const message = elements.sourceCommitMessage.value.trim();
+    if (paths.length === 0) {
+      showToast('请至少选择一个 GUI 受管文件');
+      return;
+    }
+    if (message.length < 5 || message.length > 100 || /[\r\n]/.test(message)) {
+      showToast('提交说明必须是 5–100 个字符的单行文本');
+      elements.sourceCommitMessage.focus();
+      return;
+    }
+  }
+  elements.sourceDialogTitle.textContent = isPush ? '继续推送已有源码提交' : '检查、提交并推送源码';
+  elements.sourceDialogDescription.innerHTML = isPush
+    ? '只会把当前 <code>main</code> 分支中尚未推送的提交发送到受信任的源码仓库。'
+    : '系统会先运行完整检查，再只提交你勾选的受管文件并推送到公开源码仓库。不会执行 <code>git add .</code>。';
+  elements.confirmSource.textContent = isPush ? '确认继续推送' : '确认同步';
+  elements.sourceConfirmation.value = '';
+  elements.sourceDialog.showModal();
+  window.setTimeout(() => elements.sourceConfirmation.focus(), 0);
+}
+
+async function runSourceOperation() {
+  const confirmation = elements.sourceConfirmation.value.trim();
+  if (confirmation !== 'SYNC SOURCE') {
+    showToast('确认短语不匹配，源码未同步');
+    elements.sourceConfirmation.focus();
+    return;
+  }
+  const isPush = state.sourceOperation === 'push';
+  const body = isPush
+    ? { confirmation }
+    : {
+      confirmation,
+      message: elements.sourceCommitMessage.value.trim(),
+      paths: $$('[data-source-path]:checked').map((input) => input.dataset.sourcePath),
+    };
+  try {
+    elements.confirmSource.disabled = true;
+    elements.sourceDialog.close();
+    showToast(isPush ? '正在继续推送源码…' : '正在完整检查并同步源码…');
+    const response = await api(isPush ? '/api/source-push' : '/api/source-sync', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+    state.sourceStatus = response.status;
+    renderSourceStatus();
+    await Promise.all([refreshStatus(true), loadReleaseReport()]);
+    showToast('源码已推送；正在等待当前提交的 CI 结果');
+  } catch (error) {
+    showToast(error.message);
+    await Promise.all([refreshStatus(true), loadSourceStatus(true, true)]);
+  } finally {
+    elements.confirmSource.disabled = false;
+  }
+}
+
 function renderReleaseReport() {
   const report = state.releaseReport;
   if (!report) return;
@@ -1160,7 +1350,10 @@ function connectEvents() {
   const source = new EventSource(`/api/events?token=${encodeURIComponent(token)}`);
   source.addEventListener('open', () => setConnection(true, '本机已连接'));
   source.addEventListener('log', (message) => appendLog(JSON.parse(message.data)));
-  source.addEventListener('state', () => refreshStatus(true));
+  source.addEventListener('state', () => {
+    refreshStatus(true);
+    if (location.hash === '#operations') loadSourceStatus(false, true);
+  });
   source.addEventListener('error', () => setConnection(false, '正在重连'));
 }
 
@@ -1184,7 +1377,7 @@ elements.refresh.addEventListener('click', async () => {
   if (location.hash === '#media') await loadMedia(true);
   if (location.hash === '#appearance') await loadVisuals(true);
   if (location.hash === '#health') await loadHealth(true);
-  if (location.hash === '#operations') await loadReleaseReport();
+  if (location.hash === '#operations') await Promise.all([loadReleaseReport(), loadSourceStatus(true)]);
   showToast('状态已刷新');
 });
 elements.globalNewPost.addEventListener('click', beginNewPost);
@@ -1276,6 +1469,13 @@ $$('[data-health-filter]').forEach((button) => button.addEventListener('click', 
   renderHealth();
 }));
 elements.refreshReleaseReport.addEventListener('click', loadReleaseReport);
+elements.refreshSourceStatus.addEventListener('click', () => loadSourceStatus(true));
+elements.sourceSyncButton.addEventListener('click', () => openSourceDialog('sync'));
+elements.sourcePushButton.addEventListener('click', () => openSourceDialog('push'));
+elements.confirmSource.addEventListener('click', (event) => {
+  event.preventDefault();
+  runSourceOperation();
+});
 $$('[data-preview-mode]').forEach((button) => button.addEventListener('click', () => setPreviewMode(button.dataset.previewMode)));
 $$('[data-close-dialog]').forEach((button) => button.addEventListener('click', () => {
   document.getElementById(button.dataset.closeDialog).close();
@@ -1295,6 +1495,10 @@ for (const button of elements.commandButtons) {
   button.addEventListener('click', () => runAction(button.dataset.action));
 }
 elements.deployButton.addEventListener('click', () => {
+  if (!state.sourceStatus?.readyForDeploy) {
+    showToast('源码远端同步和当前提交 CI 全部通过后才能部署');
+    return;
+  }
   if (state.releaseReport?.totals.protected > 0) {
     showToast('本次包含受保护配置变化，请先逐项核对发布清单');
   }

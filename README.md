@@ -44,10 +44,12 @@ npm run gui
 - 上传本地图片；封面工作室可按 16:9、4:3、1:1 裁剪并生成 WebP、记录 alt。
 - 在白名单和自动备份保护下修改首页背景、内页顶部图、默认封面和头像。
 - 查看内容治理队列、桌面/手机/社交预览和发布前内容/配置差异。
+- 勾选受管文章、素材或外观配置，运行完整检查后创建源码提交并推送。
+- 查看当前提交对应的 GitHub Actions 状态；源码、远端和 CI 对齐后才解锁部署。
 - 启动预览、运行完整检查与性能预算、查看 Git/依赖状态和受保护部署。
 
-它只监听 `127.0.0.1`，不提供任意命令输入框。部署需要输入
-`DEPLOY threeyang.top`，外观配置需要输入 `SAVE VISUALS`。
+它只监听 `127.0.0.1`，不提供任意命令输入框。源码同步需要输入 `SYNC SOURCE`，
+部署需要输入 `DEPLOY threeyang.top`，外观配置需要输入 `SAVE VISUALS`。
 
 `npm run check` 会先检查文章，再清理缓存、完整生成站点并验证部署保护项：
 
@@ -69,7 +71,8 @@ npm run gui
 npm run deploy
 ```
 
-`predeploy` 会自动执行 `npm run check`。不要直接运行
+`predeploy` 会先确认当前 `main` 已推送到受信任源码仓库、工作区清洁且当前提交的
+GitHub Actions 已通过，然后自动执行 `npm run check`。不要直接运行
 `hexo deploy` 或 `hexo deploy -g`，否则会绕过保护校验。
 
 部署前还应在浏览器检查首页、文章页、分类、标签、豆瓣页面和加密文章。

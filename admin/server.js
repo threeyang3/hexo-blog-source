@@ -26,6 +26,7 @@ const {
   uploadMedia,
 } = require('./content-store');
 const { getReleaseReport } = require('./release-report');
+const defaultSourceControl = require('./source-control');
 
 const execFileAsync = promisify(execFile);
 const ROOT = path.resolve(__dirname, '..');
@@ -266,7 +267,7 @@ function attachProcessOutput(child, source) {
   child.on('error', (error) => writeLog(source, 'stderr', error.message));
 }
 
-function runAction(actionId, body) {
+function validateActionRequest(actionId, body) {
   const definition = actionDefinitions[actionId];
   if (!definition) {
     const error = new Error('未知操作');
@@ -283,6 +284,11 @@ function runAction(actionId, body) {
     error.statusCode = 400;
     throw error;
   }
+  return definition;
+}
+
+function runAction(actionId, body) {
+  const definition = validateActionRequest(actionId, body);
 
   const job = {
     id: crypto.randomUUID(),
@@ -324,6 +330,45 @@ function runAction(actionId, body) {
   });
 
   return { id: job.id, action: actionId, label: definition.label };
+}
+
+async function runSourceOperation(action, label, worker) {
+  if (state.currentJob) {
+    const error = new Error(`“${state.currentJob.label}”仍在运行，请等待完成`);
+    error.statusCode = 409;
+    throw error;
+  }
+  const job = {
+    id: crypto.randomUUID(),
+    action,
+    label,
+    startedAt: timestamp(),
+  };
+  state.currentJob = job;
+  writeLog(action, 'system', `开始：${label}`);
+  pushEvent('state', { reason: 'job-started' });
+  try {
+    const result = await worker((stream, message) => writeLog(action, stream, message));
+    state.lastJob = {
+      ...job,
+      finishedAt: timestamp(),
+      success: true,
+    };
+    writeLog(action, 'system', `完成：${label}`);
+    return result;
+  } catch (error) {
+    state.lastJob = {
+      ...job,
+      finishedAt: timestamp(),
+      success: false,
+      error: error.message,
+    };
+    writeLog(action, 'stderr', `失败：${label}（${error.message}）`);
+    throw error;
+  } finally {
+    state.currentJob = null;
+    pushEvent('state', { reason: 'job-finished', result: state.lastJob });
+  }
 }
 
 function assertPreviewPortAvailable() {
@@ -472,7 +517,8 @@ function openBrowser(url) {
   child.unref();
 }
 
-function createServer() {
+function createServer(options = {}) {
+  const sourceControl = options.sourceControl || defaultSourceControl;
   let actualPort = DEFAULT_PORT;
   const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, `http://${req.headers.host || `${LOOPBACK}:${actualPort}`}`);
@@ -517,6 +563,16 @@ function createServer() {
 
         if (url.pathname === '/api/release-report' && req.method === 'GET') {
           safeJson(res, 200, { report: await getReleaseReport() });
+          return;
+        }
+
+        if (url.pathname === '/api/source-status' && req.method === 'GET') {
+          safeJson(res, 200, {
+            status: await sourceControl.getStatus({
+              refreshRemote: url.searchParams.get('refresh') === '1',
+              includeCi: true,
+            }),
+          });
           return;
         }
 
@@ -572,7 +628,32 @@ function createServer() {
 
         if (url.pathname.startsWith('/api/actions/') && req.method === 'POST') {
           const actionId = decodeURIComponent(url.pathname.slice('/api/actions/'.length));
-          safeJson(res, 202, { job: runAction(actionId, await readJsonBody(req)) });
+          const body = await readJsonBody(req);
+          validateActionRequest(actionId, body);
+          if (actionId === 'deploy') await sourceControl.assertDeployReady();
+          safeJson(res, 202, { job: runAction(actionId, body) });
+          return;
+        }
+
+        if (url.pathname === '/api/source-sync' && req.method === 'POST') {
+          const body = await readJsonBody(req, MAX_BODY_BYTES * 2);
+          const result = await runSourceOperation(
+            'source-sync',
+            '检查、提交并推送源码',
+            (onLog) => sourceControl.sync(body, onLog),
+          );
+          safeJson(res, 200, result);
+          return;
+        }
+
+        if (url.pathname === '/api/source-push' && req.method === 'POST') {
+          const body = await readJsonBody(req);
+          const result = await runSourceOperation(
+            'source-push',
+            '继续推送源码',
+            (onLog) => sourceControl.pushPending(body, onLog),
+          );
+          safeJson(res, 200, result);
           return;
         }
 
@@ -689,7 +770,7 @@ if (require.main === module) {
 
   const shutdown = () => {
     if (state.preview) state.preview.process.kill();
-    if (state.currentJob) state.currentJob.process.kill();
+    if (state.currentJob?.process) state.currentJob.process.kill();
     server.close(() => process.exit(0));
     setTimeout(() => process.exit(1), 2000).unref();
   };

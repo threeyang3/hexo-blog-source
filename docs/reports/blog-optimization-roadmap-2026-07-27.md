@@ -71,6 +71,16 @@ Search Console、部署历史、计划发布和线上 SHA 对账仍需进一步�
 - 源码提交 `abf44a1` 经本地检查和 GitHub CI 验证后完成部署；Pages 产物提交为
   `bf29c55`，线上 SHA 对账和全部健康检查通过。
 
+### 第四轮实施状态（2026-07-28）
+
+- 工作台已实现路线图中“若以后增加提交按钮”的安全约束：只提交作者明确勾选的文章、
+  草稿、素材、媒体元数据与受管视觉配置，明确禁止 `git add .`。
+- GUI 会核对固定源码 origin、`main`、ahead/behind、远端 SHA，并显示当前 HEAD 对应的
+  GitHub Actions 结果；CI 通过后才解锁 legacy Pages 部署。
+- `npm run deploy` 的 `predeploy` 同样执行源码远端与 CI 门禁，不能从命令行绕过。
+- GitHub Pages Source 仍未切换为 artifact；本次只是把现有 legacy 部署路径补成
+  “源码归档 → CI → 人工确认 → Pages → 线上 SHA 对账”的闭环。
+
 ## 二、纵向分析：博客演进至 2026-07-27 经历了什么
 
 ### 1. 内容先行期：博客首先是写作容器
@@ -349,7 +359,7 @@ Hexo 没有 Astro/Hugo 那样完整的内建图片管线，可选两种策略：
 
 #### A. 增加 sitemap、robots.txt 与 RSS/Atom
 
-本地生成结果目前没有 `sitemap.xml`、RSS/Atom 或 `robots.txt`。建议使用 Hexo 官方
+原始审计时的本地生成结果没有 `sitemap.xml`、RSS/Atom 或 `robots.txt`。建议使用 Hexo 官方
 插件目录中的 sitemap 与 feed 生成器，并在 `robots.txt` 声明 sitemap。Google 说明
 sitemap 能帮助搜索引擎更高效地发现重要页面和更新时间；RSS 则让博客脱离社交平台算法，
 恢复“读者主动订阅作者”的能力。
@@ -452,7 +462,7 @@ Markdown；旧地址 `/posts/d2f0/` 保留静态跳转和 canonical，避免外�
 - Pull Request dependency review
 
 GitHub 官方 dependency review action 能在 lockfile 变化时显示新增、移除和间接依赖的漏洞
-变化。当前 Stylus 链仍有无上游修复的 high 告警，因此策略应是“阻止新引入 critical/high”，
+变化。原始审计时 Stylus 链仍有无上游修复的 high 告警，因此策略应是“阻止新引入 critical/high”，
 而不是让已有已知告警永久阻塞所有更新。
 
 #### B. 定期线上健康检查
@@ -655,7 +665,7 @@ Hexo 默认把 `source/_posts/` 中的 Markdown 全部视为可发布内容。�
 
 ### 4. 高优先级：增加“发布前差异”，而不是再加一个发布按钮
 
-目前发布页能运行检查并要求确认短语，但作者仍需要从长日志里判断这次发布究竟改变了什么。
+路线图形成时，发布页能运行检查并要求确认短语，但作者仍需要从长日志里判断这次发布究竟改变了什么。
 下一步应在构建后生成发布清单：
 
 - 新增、修改、删除了哪些文章 URL。
