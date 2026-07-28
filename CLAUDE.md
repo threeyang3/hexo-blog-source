@@ -27,6 +27,8 @@
 - `tools/verify-content.js`：文章 Front Matter、abbrlink、封面与受管链接校验。
 - `tools/smoke-live.js`：带重试的线上首页、发现文件、加密文章、旧 URL 与构建 SHA 检查。
 - `admin/server.js`：仅监听本机的 GUI 服务、API 与命令白名单。
+- `.blog-admin/control-room.json`：运行时会话发现文件（Git 忽略）；只允许记录
+  `127.0.0.1` 地址和当次随机令牌，供 EasyPub 安全复用。
 - `admin/content-store.js`：文章/素材读写、并发哈希、路径边界与主题视觉白名单。
 - `admin/release-report.js`：只读发布清单和受保护配置变更分组。
 - `admin/source-control.js`：受管源码提交、固定远端推送、CI 查询和部署门禁。
@@ -80,6 +82,8 @@
     `_config.butterfly.yml`；禁止 `git add .`，并要求 `SYNC SOURCE`。
 20. 部署前必须确认本地 `main`、固定源码 `origin`、远端 SHA、清洁工作区和当前提交
     GitHub Actions 全部对齐。GUI 与命令行不得绕过 `tools/verify-source-sync.js`。
+20. Obsidian/EasyPub 入口只能复用经过 `/api/status` 验证的回环会话，或启动仓库
+    内固定的 `ManageBlog.bat`；不得接受任意 URL、脚本路径或命令。
 
 ## 常用命令
 

@@ -40,6 +40,12 @@ Blog Control Room 是发布链路之前的一层本机内容与操作界面，�
 文章、素材和四个主题视觉字段可以通过受限 API 修改；站点 URL、CNAME、部署仓库、
 部署分支和其他配置不能通过 GUI 修改：
 
+Obsidian/EasyPub 集成通过 `.blog-admin/control-room.json` 发现当前进程。会话文件
+仅包含进程号、回环地址、端口、启动时间和本次随机令牌，目录整体不进入 Git。
+EasyPub 会先验证文件结构和 `GET /api/status`，仅复用 `127.0.0.1` 会话；没有可用
+会话时，只能调用仓库内固定的 `ManageBlog.bat`。这条入口不扩大 GUI 的写入边界，
+也不允许 EasyPub 绕过 `npm run deploy` 的源码同步和 CI 检查。
+
 ```text
 浏览器（127.0.0.1:4173）
            │ 临时令牌 + Origin 检查

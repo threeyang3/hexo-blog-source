@@ -37,6 +37,7 @@ const BLOG_PORT = 5000;
 const MAX_BODY_BYTES = 16 * 1024;
 const MAX_LOG_LINES = 500;
 const TOKEN = crypto.randomBytes(24).toString('hex');
+const SESSION_FILE = path.join(ROOT, '.blog-admin', 'control-room.json');
 const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const npmCli = [
   process.env.npm_execpath,
@@ -754,11 +755,56 @@ function parsePort() {
   return Number.isInteger(port) && port >= 0 && port <= 65535 ? port : DEFAULT_PORT;
 }
 
+let activeSessionUrl = null;
+
+function writeControlRoomSession(url, port) {
+  const directory = path.dirname(SESSION_FILE);
+  const temporaryFile = `${SESSION_FILE}.${process.pid}.tmp`;
+  const payload = {
+    version: 1,
+    pid: process.pid,
+    host: LOOPBACK,
+    port,
+    url,
+    startedAt: new Date().toISOString(),
+  };
+
+  fs.mkdirSync(directory, { recursive: true });
+  fs.writeFileSync(temporaryFile, `${JSON.stringify(payload, null, 2)}\n`, {
+    encoding: 'utf8',
+    mode: 0o600,
+  });
+  fs.renameSync(temporaryFile, SESSION_FILE);
+  activeSessionUrl = url;
+}
+
+function removeControlRoomSession() {
+  if (!activeSessionUrl) return;
+
+  try {
+    const payload = JSON.parse(fs.readFileSync(SESSION_FILE, 'utf8'));
+    if (payload.pid === process.pid && payload.url === activeSessionUrl) {
+      fs.unlinkSync(SESSION_FILE);
+    }
+  } catch (error) {
+    if (error.code !== 'ENOENT') {
+      console.warn(`无法清理管理后台会话文件：${error.message}`);
+    }
+  } finally {
+    activeSessionUrl = null;
+  }
+}
+
 if (require.main === module) {
   const server = createServer();
   server.listen(parsePort(), LOOPBACK, () => {
     const port = server.address().port;
     const url = `http://${LOOPBACK}:${port}/?token=${TOKEN}`;
+    try {
+      writeControlRoomSession(url, port);
+    } catch (error) {
+      console.warn(`无法写入管理后台会话文件：${error.message}`);
+    }
     console.log('');
     console.log('  BLOG CONTROL ROOM');
     console.log(`  ${url}`);
@@ -771,11 +817,22 @@ if (require.main === module) {
   const shutdown = () => {
     if (state.preview) state.preview.process.kill();
     if (state.currentJob?.process) state.currentJob.process.kill();
-    server.close(() => process.exit(0));
+    server.close(() => {
+      removeControlRoomSession();
+      process.exit(0);
+    });
     setTimeout(() => process.exit(1), 2000).unref();
   };
   process.on('SIGINT', shutdown);
   process.on('SIGTERM', shutdown);
 }
 
-module.exports = { actionDefinitions, createServer, ROOT, TOKEN };
+module.exports = {
+  actionDefinitions,
+  createServer,
+  removeControlRoomSession,
+  ROOT,
+  SESSION_FILE,
+  TOKEN,
+  writeControlRoomSession,
+};

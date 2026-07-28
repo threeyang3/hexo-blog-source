@@ -36,6 +36,9 @@ npm run server
 npm run gui
 ```
 
+使用 EasyPub 的 Obsidian 用户也可以点击插件功能区的“打开博客管理后台”图标；
+插件会复用已运行的本机会话，或通过仓库内固定的 `ManageBlog.bat` 启动。
+
 控制台会在浏览器打开本机内容工作台，可以：
 
 - 搜索、新建和重新编辑 Markdown 文章，并管理草稿、待发布、已发布状态。
