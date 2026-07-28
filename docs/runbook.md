@@ -213,5 +213,6 @@ GitHub Pages 发布源之前，不要新增第二套自动部署；当前唯一�
 - 本地落后远端：先 `git fetch origin main`，查看差异并人工合并；禁止强推。
 - 有非受管变化：在命令行逐项审查、测试、提交或恢复，GUI 不会替你处理。
 - CI 缺失或失败：打开公开源码仓库对应 commit 的 Actions 日志，修复后重新提交。
-- GitHub API 暂时不可用：稍后刷新；门禁会保持锁定，不应改用 `hexo deploy` 绕过。
+- GitHub API 暂时不可用：工作台会尝试本机 GitHub CLI；两者都失败时稍后刷新，门禁会
+  保持锁定，不应改用 `hexo deploy` 绕过。
 - push 失败且本地 ahead：使用 GUI“继续推送已有提交”或人工执行等价的固定分支推送。

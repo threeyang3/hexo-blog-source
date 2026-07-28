@@ -68,19 +68,7 @@ function parsePorcelain(raw) {
   });
 }
 
-async function defaultCiResolver(headSha) {
-  const response = await fetch(CI_API, {
-    headers: {
-      Accept: 'application/vnd.github+json',
-      'User-Agent': 'threeyang-blog-control-room',
-      'X-GitHub-Api-Version': '2022-11-28',
-    },
-    signal: AbortSignal.timeout(30000),
-  });
-  if (!response.ok) {
-    throw new Error(`GitHub Actions API 返回 ${response.status}`);
-  }
-  const payload = await response.json();
+function findCiRun(payload, headSha) {
   const run = (payload.workflow_runs || []).find(
     (candidate) => candidate.head_sha === headSha && candidate.name === 'Validate Hexo site',
   );
@@ -97,6 +85,48 @@ async function defaultCiResolver(headSha) {
     updatedAt: run.updated_at,
     runId: run.id,
   };
+}
+
+async function defaultCiResolver(headSha) {
+  let publicApiError = null;
+  try {
+    const response = await fetch(CI_API, {
+      headers: {
+        Accept: 'application/vnd.github+json',
+        'User-Agent': 'threeyang-blog-control-room',
+        'X-GitHub-Api-Version': '2022-11-28',
+      },
+      signal: AbortSignal.timeout(30000),
+    });
+    if (!response.ok) {
+      throw new Error(`GitHub Actions API 返回 ${response.status}`);
+    }
+    return findCiRun(await response.json(), headSha);
+  } catch (error) {
+    publicApiError = error;
+  }
+
+  try {
+    const { stdout } = await execFileAsync('gh', [
+      'api',
+      'repos/threeyang3/hexo-blog-source/actions/runs',
+      '-f',
+      'branch=main',
+      '-f',
+      'per_page=30',
+      '--method',
+      'GET',
+    ], {
+      windowsHide: true,
+      maxBuffer: MAX_OUTPUT_BYTES,
+      encoding: 'utf8',
+      timeout: 45000,
+      env: { ...process.env, GH_PROMPT_DISABLED: '1' },
+    });
+    return findCiRun(JSON.parse(stdout), headSha);
+  } catch (fallbackError) {
+    throw new Error(`公共 API：${publicApiError.message}；GitHub CLI：${fallbackError.message}`);
+  }
 }
 
 function npmInvocation(args) {
@@ -317,5 +347,6 @@ module.exports = {
   parsePorcelain,
   validateCommitMessage,
   validateManagedPath,
+  __test: { findCiRun },
   ...defaultSourceControl,
 };

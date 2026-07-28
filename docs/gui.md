@@ -124,7 +124,7 @@ alt、宽高与用途记录在 `source/_data/media.json`。
 7. 后端不会向页面返回文章密码、Git 凭据或环境变量。
 8. 部署保留 `predeploy → npm run check`，外观和部署分别使用独立确认短语。
 9. 源码同步固定要求受信任的公开源码 origin 和 `main`，路径与提交说明均由后端验证；
-   CI 查询失败时采用“保持锁定”策略。
+   CI 公共 API 失败时降级到本机 GitHub CLI，只读查询仍失败则采用“保持锁定”策略。
 
 ## API 速查
 

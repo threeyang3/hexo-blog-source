@@ -164,6 +164,7 @@
 - 同步前固定核对公开源码 origin、`main`、ahead/behind，并运行完整 `npm run check`；
   提交说明作为独立参数传递，Git/npm 均保持 `shell: false`。
 - 推送失败后可续推已存在的本地提交，不会重复提交或自动强推。
-- 通过 GitHub 公开 Actions API 核对当前 HEAD；CI 缺失、失败或不可用时 Pages 部署锁定。
+- 通过 GitHub 公开 Actions API 核对当前 HEAD，网络失败时降级为本机 GitHub CLI
+  只读查询；CI 缺失、失败或两种渠道都不可用时 Pages 部署锁定。
 - `predeploy` 新增 `tools/verify-source-sync.js`，因此 GUI 与命令行部署使用同一门禁。
 - 新增隔离 Git 安全测试，验证路径穿越、非受管文件隔离、选择性提交和续推。

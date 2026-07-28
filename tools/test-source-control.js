@@ -7,6 +7,7 @@ const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 const {
   SOURCE_CONFIRMATION,
+  __test,
   createSourceControl,
   isManagedPath,
   parsePorcelain,
@@ -31,6 +32,20 @@ async function main() {
     { code: ' M', path: 'source/_posts/a.md', managed: true, staged: false, unstaged: true },
     { code: '??', path: 'package.json', managed: false, staged: false, unstaged: true },
   ]);
+  assert.equal(__test.findCiRun({
+    workflow_runs: [
+      { head_sha: 'abc', name: 'Unrelated workflow', status: 'completed', conclusion: 'success' },
+      {
+        id: 42,
+        head_sha: 'abc',
+        name: 'Validate Hexo site',
+        status: 'completed',
+        conclusion: 'success',
+        html_url: 'https://example.invalid/run/42',
+        updated_at: '2026-07-28T00:00:00Z',
+      },
+    ],
+  }, 'abc').state, 'success');
 
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'blog-source-control-'));
   const remote = path.join(tempRoot, 'remote.git');

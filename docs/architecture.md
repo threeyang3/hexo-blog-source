@@ -205,8 +205,9 @@ secret 会失败；只有 Pull Request CI 可显式使用非生产占位值检�
 `.github/workflows/ci.yml` 在 push/PR 上运行锁定依赖构建，PR 另外运行 dependency
 review。公开源码仓库为 `threeyang3/hexo-blog-source`，其中已配置文章密码对应的
 Repository Secret；GitHub Pages artifact 部署仍未启用，当前发布仍由受保护的
-`npm run deploy` 完成。`admin/source-control.js` 通过公开 GitHub Actions API 查询
-当前 HEAD 的运行结果；状态缺失、失败或 API 不可用都保持部署锁定。
+`npm run deploy` 完成。`admin/source-control.js` 优先通过公开 GitHub Actions API 查询
+当前 HEAD 的运行结果，网络失败时使用本机 GitHub CLI 做同一只读查询；状态缺失、失败或
+两种渠道都不可用时保持部署锁定。
 `tools/verify-source-sync.js` 在命令行 `predeploy` 中执行同一门禁。未来工作流只提供在
 `docs/templates/pages-artifact.yml`，满足模板顶部四项前置条件后才能人工启用。
 
