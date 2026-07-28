@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <title>Threeyang 内容工作台</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23192825'/%3E%3Cpath d='M17 17h21c8 0 12 4 12 10 0 5-3 8-8 9 7 2 10 6 10 12 0 8-6 12-17 12H17zm11 9v7h8c3 0 5-1 5-4 0-2-2-3-5-3zm0 16v9h8c4 0 6-2 6-5 0-2-2-4-6-4z' fill='%23e9ff70'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <div class="paper-noise" aria-hidden="true"></div>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <a class="brand" href="#dashboard" aria-label="返回概览">
+          <span class="brand__mark">B.</span>
+          <span><strong>THREEYANG</strong><small>内容工作台</small></span>
+        </a>
+
+        <nav class="main-nav" aria-label="主要功能">
+          <button class="nav-item is-active" type="button" data-view="dashboard">
+            <span class="nav-item__icon">⌂</span><span>概览</span><small>01</small>
+          </button>
+          <button class="nav-item" type="button" data-view="posts">
+            <span class="nav-item__icon">✎</span><span>文章</span><small>02</small>
+          </button>
+          <button class="nav-item" type="button" data-view="media">
+            <span class="nav-item__icon">▧</span><span>素材库</span><small>03</small>
+          </button>
+          <button class="nav-item" type="button" data-view="appearance">
+            <span class="nav-item__icon">◐</span><span>外观</span><small>04</small>
+          </button>
+          <button class="nav-item" type="button" data-view="health">
+            <span class="nav-item__icon">◎</span><span>治理</span><small>05</small>
+          </button>
+          <button class="nav-item" type="button" data-view="operations">
+            <span class="nav-item__icon">⌁</span><span>发布</span><small>06</small>
+          </button>
+        </nav>
+
+        <div class="sidebar__foot">
+          <div class="connection"><span class="pulse" id="connectionPulse"></span><span id="connectionLabel">连接中</span></div>
+          <p>LOCAL ONLY<br>127.0.0.1</p>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow" id="viewEyebrow">EDITORIAL OVERVIEW</p>
+            <h1 id="viewTitle">内容总览</h1>
+          </div>
+          <div class="topbar__actions">
+            <button class="quiet-button" id="refreshButton" type="button">刷新</button>
+            <button class="ink-button" id="globalNewPost" type="button">＋ 新建文章</button>
+          </div>
+        </header>
+
+        <section class="view is-active" id="view-dashboard" data-page="dashboard">
+          <div class="dashboard-hero">
+            <div>
+              <p class="eyebrow">GOOD AFTERNOON / EDITOR</p>
+              <h2>把想法整理成<br><em>可以被看见的文字。</em></h2>
+              <p>写作、素材、预览和发布集中在一个本机工作台。所有文章仍然保存为仓库里的 Markdown。</p>
+              <button class="acid-button" id="heroNewPost" type="button">开始写一篇文章 <span>↗</span></button>
+            </div>
+            <div class="hero-collage" aria-hidden="true">
+              <div class="collage-card collage-card--one"><span>WRITE</span></div>
+              <div class="collage-card collage-card--two"><span>READ</span></div>
+              <div class="collage-note">WORDS<br>MAKE<br>WORLDS.</div>
+            </div>
+          </div>
+
+          <div class="metric-row">
+            <article><span>文章总数</span><strong id="postCount">—</strong><small>POSTS IN LIBRARY</small></article>
+            <article><span>缺少封面</span><strong id="missingCover">—</strong><small>待完善视觉</small></article>
+            <article><span>缺少摘要</span><strong id="missingDescription">—</strong><small>待完善检索信息</small></article>
+            <article><span>源码状态</span><strong class="metric-word" id="gitState">—</strong><small id="gitBranch">正在读取 Git</small></article>
+          </div>
+
+          <div class="dashboard-grid">
+            <article class="panel recent-panel">
+              <div class="panel-heading">
+                <div><p class="eyebrow">RECENTLY EDITED</p><h3>最近文章</h3></div>
+                <button class="text-link" data-go="posts" type="button">查看全部 →</button>
+              </div>
+              <div id="recentPosts" class="recent-list"><p class="empty-note">正在读取内容库…</p></div>
+            </article>
+
+            <article class="panel launch-panel">
+              <p class="eyebrow">LOCAL PREVIEW / :5000</p>
+              <h3>先看一遍，<br>再让它上线。</h3>
+              <p>预览服务独立运行。保存文章后刷新博客页面即可检查真实主题效果。</p>
+              <div class="button-row">
+                <button class="ink-button" id="previewToggle" type="button">启动预览</button>
+                <a class="outline-button is-disabled" id="previewLink" href="http://localhost:5000/" target="_blank" rel="noreferrer" aria-disabled="true">打开博客 ↗</a>
+              </div>
+              <dl class="runtime-list">
+                <div><dt>CNAME</dt><dd id="cnameValue">—</dd></div>
+                <div><dt>Node</dt><dd id="nodeVersion">—</dd></div>
+                <div><dt>Hexo / Butterfly</dt><dd><span id="hexoVersion">—</span> / <span id="themeVersion">—</span></dd></div>
+              </dl>
+            </article>
+          </div>
+        </section>
+
+        <section class="view" id="view-posts" data-page="posts">
+          <div class="content-manager">
+            <aside class="post-library">
+              <div class="library-toolbar">
+                <label class="search-box">
+                  <span>⌕</span>
+                  <input id="postSearch" type="search" placeholder="搜索标题、标签或正文摘要">
+                </label>
+                <button class="square-button" id="newPostButton" type="button" aria-label="新建文章">＋</button>
+              </div>
+              <div class="library-filter">
+                <strong id="postResultCount">0 篇文章</strong>
+                <div>
+                  <select id="postStatusFilter" aria-label="文章状态筛选">
+                    <option value="all">全部状态</option>
+                    <option value="draft">草稿</option>
+                    <option value="pending">待发布</option>
+                    <option value="published">已发布</option>
+                  </select>
+                  <select id="postSort" aria-label="文章排序">
+                    <option value="date">按发布日期</option>
+                    <option value="modified">按最近修改</option>
+                    <option value="title">按标题</option>
+                  </select>
+                </div>
+              </div>
+              <div class="post-list" id="postList"><p class="empty-note">正在读取文章…</p></div>
+            </aside>
+
+            <article class="editor-shell" id="editorShell">
+              <div class="editor-empty" id="editorEmpty">
+                <span class="editor-empty__glyph">稿</span>
+                <h2>选择一篇文章开始编辑</h2>
+                <p>或者新建草稿。保存后内容会直接写回 <code>source/_posts</code>。</p>
+              </div>
+
+              <form class="post-editor is-hidden" id="postEditor">
+                <div class="editor-topline">
+                  <div>
+                    <p class="eyebrow" id="editorMode">EDITING MARKDOWN</p>
+                    <span class="save-state" id="saveState">所有修改已保存</span>
+                  </div>
+                  <div class="button-row">
+                    <select class="status-select" id="postStatus" aria-label="文章状态">
+                      <option value="draft">草稿</option>
+                      <option value="pending">待发布</option>
+                      <option value="published">已发布</option>
+                    </select>
+                    <button class="outline-button" id="historyButton" type="button">版本历史</button>
+                    <button class="outline-button" id="realPreviewButton" type="button">多端预览</button>
+                    <button class="outline-button" id="reloadPostButton" type="button">重新载入</button>
+                    <button class="ink-button" id="savePostButton" type="submit">保存文章</button>
+                  </div>
+                </div>
+
+                <label class="title-field">
+                  <span>文章标题</span>
+                  <textarea id="postTitle" rows="1" maxlength="200" placeholder="输入一个有力量的标题" required></textarea>
+                </label>
+
+                <div class="meta-grid">
+                  <label><span>发布日期</span><input id="postDate" type="datetime-local" required></label>
+                  <label><span>分类</span><input id="postCategory" type="text" placeholder="例如：读书笔记"></label>
+                  <label class="meta-grid__wide"><span>标签 <small>使用逗号分隔</small></span><input id="postTags" type="text" placeholder="文学, 思考, 随笔"></label>
+                </div>
+
+                <label class="description-field">
+                  <span>文章摘要 <small id="descriptionCount">0 / 500</small></span>
+                  <textarea id="postDescription" rows="3" maxlength="500" placeholder="用于首页卡片和搜索引擎，也可以暂时留空"></textarea>
+                </label>
+
+                <div class="cover-field">
+                  <div class="cover-preview" id="postCoverPreview"><span>暂无封面</span></div>
+                  <label>
+                    <span>文章封面</span>
+                    <input id="postCover" type="text" placeholder="/img/cover.jpg 或 https://…">
+                    <small>推荐使用素材库中的站内图片，避免外链失效。</small>
+                  </label>
+                  <button class="outline-button" id="pickPostCover" type="button">从素材库选择</button>
+                </div>
+
+                <div class="writing-tabs" role="tablist" aria-label="正文编辑模式">
+                  <button class="is-active" data-editor-tab="write" type="button" role="tab">Markdown</button>
+                  <button data-editor-tab="preview" type="button" role="tab">即时预览</button>
+                  <span id="wordCount">0 字</span>
+                </div>
+                <textarea class="markdown-editor" id="postBody" spellcheck="false" placeholder="从这里开始写作…"></textarea>
+                <article class="markdown-preview is-hidden" id="markdownPreview"></article>
+              </form>
+            </article>
+          </div>
+        </section>
+
+        <section class="view" id="view-media" data-page="media">
+          <div class="page-intro">
+            <div><p class="eyebrow">VISUAL LIBRARY</p><h2>素材不是附件，<br>它是文章的第一句话。</h2></div>
+            <label class="upload-button">
+              <input id="mediaUpload" type="file" accept="image/png,image/jpeg,image/gif,image/webp" multiple>
+              <span>＋ 上传图片</span>
+            </label>
+          </div>
+          <div class="media-toolbar">
+            <p><strong id="mediaCount">0</strong> 个本地素材 · 单张不超过 8 MB</p>
+            <label class="search-box search-box--small"><span>⌕</span><input id="mediaSearch" type="search" placeholder="搜索文件名"></label>
+          </div>
+          <div class="media-grid" id="mediaGrid"><p class="empty-note">正在读取素材库…</p></div>
+        </section>
+
+        <section class="view" id="view-appearance" data-page="appearance">
+          <div class="page-intro page-intro--appearance">
+            <div><p class="eyebrow">VISUAL DIRECTION</p><h2>让每一张图，<br>都属于这个博客。</h2></div>
+            <p>这里只编辑四个经过白名单保护的 Butterfly 视觉字段。保存前会备份原配置，不会改动域名、部署仓库或其他主题选项。</p>
+          </div>
+          <form id="visualForm">
+            <div class="visual-grid">
+              <article class="visual-card visual-card--wide" data-visual="indexImg">
+                <div class="visual-card__image" id="indexImgPreview"><span>首页背景</span></div>
+                <div>
+                  <p class="eyebrow">HOMEPAGE HERO</p><h3>首页背景</h3>
+                  <input id="indexImg" type="text" required>
+                  <button class="text-link" data-pick-visual="indexImg" type="button">从素材库选择 →</button>
+                </div>
+              </article>
+              <article class="visual-card" data-visual="defaultTopImg">
+                <div class="visual-card__image" id="defaultTopImgPreview"><span>页面顶部</span></div>
+                <div><p class="eyebrow">PAGE TOP</p><h3>内页顶部背景</h3><input id="defaultTopImg" type="text" required><button class="text-link" data-pick-visual="defaultTopImg" type="button">选择素材 →</button></div>
+              </article>
+              <article class="visual-card" data-visual="defaultCover">
+                <div class="visual-card__image" id="defaultCoverPreview"><span>默认封面</span></div>
+                <div><p class="eyebrow">FALLBACK COVER</p><h3>默认文章封面</h3><input id="defaultCover" type="text" required><button class="text-link" data-pick-visual="defaultCover" type="button">选择素材 →</button></div>
+              </article>
+              <article class="visual-card" data-visual="avatar">
+                <div class="visual-card__image visual-card__image--avatar" id="avatarPreview"><span>头像</span></div>
+                <div><p class="eyebrow">PROFILE</p><h3>站点头像</h3><input id="avatar" type="text" required><button class="text-link" data-pick-visual="avatar" type="button">选择素材 →</button></div>
+              </article>
+            </div>
+            <div class="config-safety">
+              <div><strong>配置护栏已开启</strong><p>并发修改检测 · 自动备份 · 字段白名单 · 保存确认</p></div>
+              <button class="ink-button" type="submit">保存外观设置</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="view" id="view-health" data-page="health">
+          <div class="page-intro">
+            <div><p class="eyebrow">CONTENT GOVERNANCE</p><h2>问题不是数字，<br>而是一份可以清空的队列。</h2></div>
+            <button class="outline-button" id="refreshHealthButton" type="button">重新扫描内容</button>
+          </div>
+          <div class="health-summary" id="healthSummary">
+            <article><span>已发布</span><strong>—</strong></article>
+            <article><span>待发布</span><strong>—</strong></article>
+            <article><span>草稿</span><strong>—</strong></article>
+            <article><span>待处理</span><strong>—</strong></article>
+          </div>
+          <div class="health-toolbar">
+            <div class="filter-pills" id="healthFilters">
+              <button class="is-active" type="button" data-health-filter="all">全部</button>
+              <button type="button" data-health-filter="warning">需确认</button>
+              <button type="button" data-health-filter="missing-description">缺摘要</button>
+              <button type="button" data-health-filter="missing-cover">缺封面</button>
+              <button type="button" data-health-filter="singleton-tag">孤立标签</button>
+            </div>
+            <strong id="healthIssueCount">0 项</strong>
+          </div>
+          <div class="health-queue" id="healthQueue"><p class="empty-note">正在分析内容…</p></div>
+        </section>
+
+        <section class="view" id="view-operations" data-page="operations">
+          <div class="page-intro">
+            <div><p class="eyebrow">PUBLISHING DESK</p><h2>发布不是一个按钮，<br>而是一条可核对的路径。</h2></div>
+            <div class="job-chip" id="jobLabel">CONTROL ROOM / READY</div>
+          </div>
+
+          <article class="release-report">
+            <div class="panel-heading">
+              <div><p class="eyebrow">RELEASE MANIFEST</p><h3>本次发布会改变什么</h3></div>
+              <button class="text-link" id="refreshReleaseReport" type="button">重新计算 →</button>
+            </div>
+            <div class="release-summary" id="releaseSummary"><p class="empty-note">正在读取 Git 差异…</p></div>
+            <div class="release-groups" id="releaseGroups"></div>
+          </article>
+
+          <div class="command-grid">
+            <button class="command-card command-card--primary" data-action="check" type="button"><span>A1</span><strong>完整检查</strong><small>清理、构建并验证保护项</small><b>↗</b></button>
+            <button class="command-card" data-action="build" type="button"><span>A2</span><strong>生成站点</strong><small>执行 Hexo build，不发布</small><b>↗</b></button>
+            <button class="command-card" data-action="clean" type="button"><span>A3</span><strong>清理缓存</strong><small>移除 public 与 Hexo 缓存</small><b>↗</b></button>
+            <button class="command-card" data-action="git-status" type="button"><span>A4</span><strong>Git 状态</strong><small>查看分支和未提交改动</small><b>↗</b></button>
+            <button class="command-card" data-action="outdated" type="button"><span>A5</span><strong>依赖更新</strong><small>只检查，不自动升级</small><b>↗</b></button>
+            <button class="command-card" data-action="audit" type="button"><span>A6</span><strong>安全审计</strong><small>检查生产依赖漏洞</small><b>↗</b></button>
+            <button class="command-card" data-action="smoke-live" type="button"><span>A7</span><strong>线上健康检查</strong><small>核对首页、订阅源与加密文章</small><b>↗</b></button>
+            <button class="command-card" data-action="performance" type="button"><span>A8</span><strong>性能预算</strong><small>核对页面体积、脚本和第三方来源</small><b>↗</b></button>
+          </div>
+
+          <article class="deploy-card">
+            <span class="live-stamp">LIVE</span>
+            <div><p class="eyebrow">PROTECTED RELEASE</p><h3>部署到 GitHub Pages</h3><p>部署前自动执行完整检查。CNAME、仓库、分支、主题或加密文章保护失败时不会发布。</p></div>
+            <button class="danger-button" id="deployButton" type="button">准备部署</button>
+          </article>
+
+          <article class="terminal">
+            <div class="terminal__bar"><div><i></i><i></i><i></i></div><span>实时命令记录</span><button id="clearLogButton" type="button">清空</button></div>
+            <div class="terminal__output" id="terminalOutput" role="log" aria-live="polite"><p class="terminal__empty">等待操作。命令输出会实时显示在这里。</p></div>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <dialog id="mediaDialog" class="media-dialog" aria-labelledby="mediaDialogTitle">
+      <div class="dialog-head"><div><p class="eyebrow">SELECT FROM LIBRARY</p><h2 id="mediaDialogTitle">选择一个素材</h2></div><button class="dialog-close" data-close-dialog="mediaDialog" type="button" aria-label="关闭">×</button></div>
+      <div class="media-grid media-grid--dialog" id="mediaPickerGrid"></div>
+    </dialog>
+
+    <dialog id="historyDialog" class="wide-dialog" aria-labelledby="historyDialogTitle">
+      <div class="dialog-head"><div><p class="eyebrow">LOCAL VERSION HISTORY</p><h2 id="historyDialogTitle">文章版本历史</h2></div><button class="dialog-close" data-close-dialog="historyDialog" type="button" aria-label="关闭">×</button></div>
+      <div class="history-layout">
+        <div class="history-list" id="historyList"><p class="empty-note">正在读取历史…</p></div>
+        <div class="history-diff" id="historyDiff"><p class="empty-note">选择一个版本查看与当前文章的差异。</p></div>
+      </div>
+    </dialog>
+
+    <dialog id="previewDialog" class="preview-dialog" aria-labelledby="previewDialogTitle">
+      <div class="dialog-head"><div><p class="eyebrow">REAL THEME PREVIEW</p><h2 id="previewDialogTitle">桌面、手机与分享预览</h2></div><button class="dialog-close" data-close-dialog="previewDialog" type="button" aria-label="关闭">×</button></div>
+      <div class="preview-toolbar">
+        <div class="filter-pills">
+          <button class="is-active" type="button" data-preview-mode="desktop">桌面</button>
+          <button type="button" data-preview-mode="mobile">手机</button>
+          <button type="button" data-preview-mode="social">社交卡片</button>
+        </div>
+        <a class="text-link" id="previewExternalLink" href="http://localhost:5000/" target="_blank" rel="noreferrer">新窗口打开 ↗</a>
+      </div>
+      <div class="device-stage" id="deviceStage">
+        <iframe id="themePreviewFrame" title="Butterfly 真实主题预览"></iframe>
+        <article class="social-preview is-hidden" id="socialPreview">
+          <div class="social-preview__image" id="socialPreviewImage"></div>
+          <div><small>THREEYANG.TOP</small><h3 id="socialPreviewTitle"></h3><p id="socialPreviewDescription"></p></div>
+        </article>
+      </div>
+    </dialog>
+
+    <dialog id="imageWorkshopDialog" class="wide-dialog workshop-dialog" aria-labelledby="imageWorkshopTitle">
+      <div class="dialog-head"><div><p class="eyebrow">COVER WORKSHOP</p><h2 id="imageWorkshopTitle">封面工作室</h2></div><button class="dialog-close" data-close-dialog="imageWorkshopDialog" type="button" aria-label="关闭">×</button></div>
+      <div class="workshop-layout">
+        <div class="workshop-canvas-wrap"><canvas id="workshopCanvas" width="960" height="540"></canvas></div>
+        <form id="workshopForm">
+          <label>输出比例
+            <select id="workshopRatio">
+              <option value="wide">16:9 · 首页横图</option>
+              <option value="card">4:3 · 文章卡片</option>
+              <option value="square">1:1 · 社交分享</option>
+              <option value="all">一次生成三种比例</option>
+            </select>
+          </label>
+          <label>焦点横向位置 <output id="workshopXValue">50%</output><input id="workshopX" type="range" min="0" max="100" value="50"></label>
+          <label>焦点纵向位置 <output id="workshopYValue">50%</output><input id="workshopY" type="range" min="0" max="100" value="50"></label>
+          <label>画面缩放 <output id="workshopZoomValue">1.00×</output><input id="workshopZoom" type="range" min="100" max="250" value="100"></label>
+          <label>图片替代文本<textarea id="workshopAlt" maxlength="300" rows="3" placeholder="描述图片传达的内容，而不是只写“封面图”"></textarea></label>
+          <label>输出文件名<input id="workshopName" maxlength="100" placeholder="article-cover"></label>
+          <p class="workshop-note">生成 WebP；原图保留。输出前会校验格式、尺寸和 8 MB 上限。</p>
+          <button class="ink-button" type="submit">生成封面素材</button>
+        </form>
+      </div>
+    </dialog>
+
+    <dialog id="visualDialog" aria-labelledby="visualDialogTitle">
+      <form method="dialog">
+        <button class="dialog-close" value="cancel" aria-label="关闭">×</button>
+        <p class="eyebrow">CONFIG CHECKPOINT</p>
+        <h2 id="visualDialogTitle">保存经过保护的视觉配置</h2>
+        <p>系统将先备份 <code>_config.butterfly.yml</code>，再只更新首页背景、内页顶部、默认封面和头像。</p>
+        <label for="visualConfirmation">输入 <code>SAVE VISUALS</code></label>
+        <input id="visualConfirmation" autocomplete="off" spellcheck="false">
+        <div class="dialog-actions"><button class="outline-button" value="cancel">取消</button><button class="ink-button" id="confirmVisualButton" value="default">确认保存</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="deployDialog" aria-labelledby="deployDialogTitle">
+      <form method="dialog">
+        <button class="dialog-close" value="cancel" aria-label="关闭">×</button>
+        <p class="eyebrow">FINAL CHECKPOINT</p>
+        <h2 id="deployDialogTitle">这次操作会更新线上网站。</h2>
+        <p>请确认已经查看本地预览。输入确认短语后，系统才会运行带完整校验的部署命令。</p>
+        <label for="deployConfirmation">输入 <code>DEPLOY threeyang.top</code></label>
+        <input id="deployConfirmation" autocomplete="off" spellcheck="false">
+        <div class="dialog-actions"><button class="outline-button" value="cancel">取消</button><button class="danger-button" id="confirmDeployButton" value="default">确认并部署</button></div>
+      </form>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="/app.js"></script>
+  </body>
+</html>
