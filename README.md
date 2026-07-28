@@ -91,7 +91,7 @@ Atom、robots、加密文章、旧文章跳转和 `build-info.json` 源码提交
 - `admin/content-store.js`：文章、素材和白名单视觉配置的数据层。
 - `source/_drafts/`：草稿和待发布文章；正式构建不包含它们。
 - `source/_data/media.json`：封面变体、尺寸和替代文本元数据。
-- `.blog-admin/history/`：被 Git 忽略的本地文章恢复点，默认每篇保留最近 20 版。
+- `.blog-admin/history/`：被 Git 忽略的本地文章恢复点，默认每篇按时间倒序保留 20 版。
 - `scripts/build-info.js`：为生成站点写入 commit 与构建时间。
 - `public/`、`.deploy_git/`、`db.json`：生成物或部署缓存，不纳入源码 Git。
 

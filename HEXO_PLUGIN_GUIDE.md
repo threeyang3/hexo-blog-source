@@ -117,17 +117,19 @@ hexo --debug
 {
   "scripts": {
     "build": "hexo generate",
-    "check": "npm run verify:content && npm run clean && npm run build -- --bail && npm run verify && npm run verify:performance",
+    "check": "npm run verify:source && npm run verify:content && npm run clean && npm run build -- --bail && npm run verify && npm run verify:performance",
     "clean": "hexo clean",
     "deploy": "hexo deploy",
     "gui": "node admin/server.js",
+    "postdeploy": "npm run smoke:live",
     "predeploy": "npm run check",
     "server": "hexo server",
     "smoke:live": "node tools/smoke-live.js",
     "test:gui": "node tools/test-admin.js && node tools/test-editorial-workflow.js",
     "verify": "node tools/verify-build.js",
     "verify:content": "node tools/verify-content.js",
-    "verify:performance": "node tools/verify-performance.js"
+    "verify:performance": "node tools/verify-performance.js",
+    "verify:source": "node tools/verify-source-privacy.js"
   }
 }
 ```

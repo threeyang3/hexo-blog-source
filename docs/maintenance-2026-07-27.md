@@ -14,7 +14,7 @@
 - 服务仅监听 `127.0.0.1`，使用每次启动随机令牌和 Origin 检查。
 - 部署仍调用 `npm run deploy`，保留 `predeploy` 全量保护，并增加
   `DEPLOY threeyang.top` 人工确认。
-- 新增草稿/待发布/已发布状态、最近 20 版本地历史、安全差异与恢复。
+- 新增草稿/待发布/已发布状态、按时间倒序保留 20 版的本地历史、安全差异与恢复。
 - 新增封面工作室，可按 16:9、4:3、1:1 裁剪 WebP 并保存 alt/尺寸/用途。
 - 新增内容治理队列、真实桌面/手机预览、社交卡片和只读发布差异。
 - 新增代表页面体积、首页脚本和第三方运行时来源预算。
@@ -88,6 +88,7 @@
 
 - 新增 `npm run check`：内容检查、clean、build、verify。
 - 新增部署前置检查，`npm run deploy` 会自动运行完整验证。
+- 新增部署后自动重试与线上源码 SHA 对账；同时检查发现文件、加密文章和旧 URL 跳转。
 - 快捷批处理改为调用 npm scripts，避免绕过保护。
 - 自动验证 CNAME、部署仓库、分支、canonical URL、主题资源和加密输出。
 - 新增 GitHub Actions 构建验证。
@@ -116,9 +117,8 @@
 - npm 审计：先由 28 项降至构建链上的 6 high；2026-07-28 使用 npm
   `overrides` 将 `brace-expansion` 固定到兼容的修复版 5.0.8 后降为 0。
 
-## 明确未执行
+## 仍未执行
 
-- 没有运行 `npm run deploy`，线上站点仍是 2026-06-03 的部署版本。
 - 没有修改 GitHub Pages Custom domain 或仓库 Pages 设置。
 - 当前电脑仍运行 Node.js 22.15.0，应升级到 `.nvmrc` 指定的 22.23.1。
 
@@ -132,12 +132,24 @@
   不向任何远端推送。
 - 首次远端 CI 暴露 `.gitignore` 的 `public/` 规则同时忽略了 `admin/public/`；现已改为
   只忽略根目录 `/public/`，GUI 前端静态文件已纳入源码，修复后的完整 CI 通过。
-- 源码 CI 已启用；Pages artifact 工作流仍只是模板，本次没有部署网站，也没有修改
-  Pages Source、Custom domain 或 environment。
+- 源码 CI 已启用；Pages artifact 工作流仍只是模板，现有 legacy `master` 部署路径继续
+  作为唯一发布通道。
+
+## 2026-07-28 线上部署
+
+- 源码提交 `abf44a1` 的 GitHub CI 通过后，使用受保护的 `npm run deploy` 发布。
+- `predeploy` 再次通过公开源码隐私、51 篇内容、完整构建、CNAME、加密输出和性能预算。
+- 静态产物提交 `bf29c55` 已推送到 `threeyang3/threeyang3.github.io` 的 `master`。
+- Pages 在第 5 次检查时完成更新；首页、Sitemap、Atom、robots、加密文章、旧 URL 跳转和
+  `build-info.json` 全部通过，线上源码 SHA 为 `abf44a1`。
+- 部署前发现旧 URL 页面被主题布局附加第二个 canonical；已设置 `layout: false`，并新增
+  “只能有一个 canonical”的构建阻断规则。
+- GitHub Pages 仍为 `master` 根目录的 legacy build，Custom domain 仍为
+  `threeyang.top`，HTTPS 强制开启；本次没有修改任何 Pages 设置。
 
 ## 后续动作
 
-1. 确认 Pages 发布源、自定义域名和 environment 保护后，审查并启用 artifact 模板。
-2. 浏览器人工检查关键页面和加密文章，再由作者决定是否部署。
-3. 从治理队列逐步补充摘要和封面。
-4. 有 Search Console 数据后，再按真实曝光与索引问题排序旧文更新。
+1. 先观察当前 legacy 发布路径的稳定性；若以后迁移 artifact，再单独确认 Pages Source
+   和 `github-pages` environment，避免两条路径同时自动运行。
+2. 从治理队列逐步补充摘要和封面。
+3. 有 Search Console 数据后，再按真实曝光与索引问题排序旧文更新。
