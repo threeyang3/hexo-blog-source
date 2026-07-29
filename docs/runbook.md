@@ -36,6 +36,18 @@ npm run gui
 调整背景、默认封面和头像。页面里的
 “启动预览”会启动下方的 Hexo 服务。
 
+### 从 Obsidian 打开
+
+EasyPub 安装或更新后，应把同一次 `npm run build` 生成的 `main.js`、`manifest.json`
+和 `styles.css` 放入 Vault 的 `.obsidian/plugins/easy-pub/`，再重载插件。在
+“设置 → EasyPub”中把 Hexo 仓库路径设为本仓库绝对路径，然后可通过仪表盘图标、命令
+`Open Hexo management console` 或设置页按钮打开。
+
+后台未运行时，EasyPub 只启动本仓库固定的 `ManageBlog.bat`；后台已运行时，只复用
+经过 `/api/status` 验证的 `127.0.0.1` 会话。兼容仓库中的 `Deploy to Hexo` 和
+“自动部署”都会转入受保护发布页，不会直接调用 Hexo deploy。插件安装、协议和排障详见
+[EasyPub Control Room 文档](https://github.com/threeyang3/easyPub/blob/main/docs/control-room.md)。
+
 新文章默认是 `_drafts` 中的草稿；“待发布”仍留在 `_drafts` 并带
 `workflow: pending`，只有“已发布”会移动到 `_posts`。状态移动与恢复都要求
 `originalHash` 一致。每次有变化的保存前版本位于被忽略的
@@ -209,6 +221,9 @@ GitHub Pages 发布源之前，不要新增第二套自动部署；当前唯一�
 
 ### 源码发布门禁排障
 
+- Obsidian 仍显示旧命令：重新复制 EasyPub `release/` 中同一次构建的三份文件并重载插件。
+- EasyPub 提示仓库不兼容：检查绝对路径、`ManageBlog.bat`、`admin/server.js` 和
+  `package.json` 中精确的 `scripts.gui`。
 - `origin` 不一致：运行 `git remote -v` 核对，不要让 GUI 自动改写 remote。
 - 本地落后远端：先 `git fetch origin main`，查看差异并人工合并；禁止强推。
 - 有非受管变化：在命令行逐项审查、测试、提交或恢复，GUI 不会替你处理。

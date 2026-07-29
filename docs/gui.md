@@ -24,6 +24,12 @@ npm run gui
 3. 后台已运行时，EasyPub 会复用当前本机会话；否则只会启动仓库内固定的
    `ManageBlog.bat`，浏览器随后自动打开。
 
+如果 Obsidian 中还没有对应入口，需要先构建或下载 EasyPub，并把同一次构建产生的
+`main.js`、`manifest.json`、`styles.css` 一起放入 Vault 的
+`.obsidian/plugins/easy-pub/`，随后关闭并重新启用插件。只更新 EasyPub 源码仓库不会
+自动更新 Vault 内已安装的插件。插件侧完整说明见
+[Blog Control Room 接入指南](https://github.com/threeyang3/easyPub/blob/main/docs/control-room.md)。
+
 服务启动后会把本次随机令牌和本机地址写入
 `.blog-admin/control-room.json`。该文件被 Git 忽略，只用于本机进程发现；
 正常关闭时会删除，异常退出遗留的记录也必须先通过 `/api/status` 验证才能复用。
@@ -130,13 +136,13 @@ alt、宽高与用途记录在 `source/_data/media.json`。
 2. 每次启动生成新的随机令牌；API 请求没有令牌会被拒绝。
 3. Obsidian 入口只接受 `127.0.0.1`、当前端口和 48 位随机令牌组成的会话地址，
    不会打开会话文件中的外部网址，也不接受任意命令。
-3. 修改请求校验浏览器 Origin。
-4. 命令操作使用固定白名单、固定参数和 `shell: false`，不接受自定义命令。
-5. 文章与素材 ID 在服务端解析后再次检查目录边界，不能访问仓库外文件。
-6. 文章保存使用 SHA-256 乐观锁，避免覆盖其他编辑器产生的新版本。
-7. 后端不会向页面返回文章密码、Git 凭据或环境变量。
-8. 部署保留 `predeploy → npm run check`，外观和部署分别使用独立确认短语。
-9. 源码同步固定要求受信任的公开源码 origin 和 `main`，路径与提交说明均由后端验证；
+4. 修改请求校验浏览器 Origin。
+5. 命令操作使用固定白名单、固定参数和 `shell: false`，不接受自定义命令。
+6. 文章与素材 ID 在服务端解析后再次检查目录边界，不能访问仓库外文件。
+7. 文章保存使用 SHA-256 乐观锁，避免覆盖其他编辑器产生的新版本。
+8. 后端不会向页面返回文章密码、Git 凭据或环境变量。
+9. 部署保留 `predeploy → npm run check`，外观和部署分别使用独立确认短语。
+10. 源码同步固定要求受信任的公开源码 origin 和 `main`，路径与提交说明均由后端验证；
    CI 公共 API 失败时降级到本机 GitHub CLI，只读查询仍失败则采用“保持锁定”策略。
 
 ## API 速查
@@ -183,6 +189,12 @@ npm run check
 
 - 4173 端口占用：关闭旧工作台窗口后重新启动。
 - 缺少访问令牌：从启动窗口打印的完整地址重新打开。
+- Obsidian 中没有管理后台入口：确认 Vault 插件目录中的三份 EasyPub 文件来自最新的
+  同一次构建，随后重载插件。
+- Obsidian 提示仓库不兼容：确认填写的是绝对路径，根目录存在 `ManageBlog.bat`、
+  `admin/server.js`，且 `scripts.gui` 精确为 `node admin/server.js`。
+- Obsidian 无法复用旧会话：关闭残留的管理后台窗口或进程后重新启动；不要手工修改
+  `.blog-admin/control-room.json` 中的地址或令牌。
 - 保存返回 409：文件已在其他程序中修改；复制未保存正文，重新载入后合并。
 - 状态切换返回冲突：重新载入文章，确认目标目录没有同名文件。
 - 图片上传失败：确认格式受支持且不超过 8 MB。

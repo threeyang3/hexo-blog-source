@@ -38,6 +38,9 @@ npm run gui
 
 使用 EasyPub 的 Obsidian 用户也可以点击插件功能区的“打开博客管理后台”图标；
 插件会复用已运行的本机会话，或通过仓库内固定的 `ManageBlog.bat` 启动。
+EasyPub 必须使用同一次生产构建生成的 `main.js`、`manifest.json` 和 `styles.css`；
+更新插件后需要在 Obsidian 中重载。完整接入与排障说明见
+[EasyPub Blog Control Room 指南](https://github.com/threeyang3/easyPub/blob/main/docs/control-room.md)。
 
 控制台会在浏览器打开本机内容工作台，可以：
 

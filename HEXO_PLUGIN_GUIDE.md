@@ -398,7 +398,9 @@ https://blog.com/posts/2a0d/
 3. **Hexo 命令集成**
    - 执行 `hexo new` 创建文章
    - 执行 `hexo generate` 生成
-   - 执行 `npm run deploy` 部署，禁止绕过 predeploy 校验
+   - 普通 Hexo 仓库可执行自己的安全部署命令
+   - 检测到本仓库 Blog Control Room 时必须打开管理后台，禁止直接调用
+     `hexo deploy` 或绕过 `predeploy`
    - 执行 `hexo server` 预览
 
 4. **状态同步**
@@ -425,6 +427,20 @@ https://blog.com/posts/2a0d/
 - 新文章必须立即获得唯一 `abbrlink`，因为 `npm run verify:content` 在构建前执行。
 
 Obsidian 插件若与工作台同时使用，应在写入前重新读取文件，并对比 mtime 或内容哈希。
+
+### 6.6 Blog Control Room 发现协议
+
+本仓库与 EasyPub 使用被忽略的 `.blog-admin/control-room.json` 发现运行中后台：
+
+- 插件设置必须是仓库绝对路径。
+- 仓库必须存在 `ManageBlog.bat`、`admin/server.js`，且 `scripts.gui` 精确为
+  `node admin/server.js`。
+- 会话 URL 只能使用 `http://127.0.0.1:<port>/`，且只能包含一个 48 位十六进制
+  `token` 参数。
+- 打开前必须请求 `/api/status`；失败时不得信任会话文件中的 URL。
+- 没有可复用会话时只能启动固定 launcher，不能接受用户提供的脚本或命令。
+
+该会话令牌只用于本机后台访问，不是文章密码。插件不得记录、同步或提交令牌文件。
 
 ---
 

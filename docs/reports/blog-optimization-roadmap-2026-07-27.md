@@ -58,7 +58,8 @@ Front Matter 没有形成内容质量约束。
 
 Pages 远端发布部分仍严格停在模板阶段：`docs/templates/pages-artifact.yml` 未放入活动
 工作流，也未修改 Pages 发布源或执行部署。公开源码 remote 与 Actions Secret 已配置；
-Search Console、部署历史、计划发布和线上 SHA 对账仍需进一步的远端设置与作者授权。
+Search Console、计划发布和 Pages artifact 部署仍需进一步的远端设置与作者授权；线上
+SHA 对账已由现有 legacy 部署路径完成。
 
 ### 第三轮实施与部署状态（2026-07-28）
 
@@ -80,6 +81,17 @@ Search Console、部署历史、计划发布和线上 SHA 对账仍需进一步�
 - `npm run deploy` 的 `predeploy` 同样执行源码远端与 CI 门禁，不能从命令行绕过。
 - GitHub Pages Source 仍未切换为 artifact；本次只是把现有 legacy 部署路径补成
   “源码归档 → CI → 人工确认 → Pages → 线上 SHA 对账”的闭环。
+
+### 第五轮实施状态（2026-07-28）
+
+- EasyPub 已增加 Obsidian 功能区、命令面板和设置页三个 Blog Control Room 入口。
+- 运行中的后台通过被忽略的 `.blog-admin/control-room.json` 发现；EasyPub 严格校验
+  绝对仓库路径、固定启动脚本、`127.0.0.1`、唯一随机令牌，并在复用前请求
+  `/api/status`。
+- 对兼容博客，EasyPub 的部署命令和自动部署会进入受保护 GUI，不再绕过源码提交、
+  GitHub Actions 与 `predeploy`。
+- EasyPub 的 PicGo、图片嵌入转换、Control Room 接入、测试、文档和生产包已经同步到
+  GitHub `main`；博客与插件两边的 CI 均通过。
 
 ## 二、纵向分析：博客演进至 2026-07-27 经历了什么
 

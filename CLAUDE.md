@@ -82,7 +82,7 @@
     `_config.butterfly.yml`；禁止 `git add .`，并要求 `SYNC SOURCE`。
 20. 部署前必须确认本地 `main`、固定源码 `origin`、远端 SHA、清洁工作区和当前提交
     GitHub Actions 全部对齐。GUI 与命令行不得绕过 `tools/verify-source-sync.js`。
-20. Obsidian/EasyPub 入口只能复用经过 `/api/status` 验证的回环会话，或启动仓库
+21. Obsidian/EasyPub 入口只能复用经过 `/api/status` 验证的回环会话，或启动仓库
     内固定的 `ManageBlog.bat`；不得接受任意 URL、脚本路径或命令。
 
 ## 常用命令

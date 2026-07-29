@@ -168,3 +168,16 @@
   只读查询；CI 缺失、失败或两种渠道都不可用时 Pages 部署锁定。
 - `predeploy` 新增 `tools/verify-source-sync.js`，因此 GUI 与命令行部署使用同一门禁。
 - 新增隔离 Git 安全测试，验证路径穿越、非受管文件隔离、选择性提交和续推。
+
+## 2026-07-28 Obsidian / EasyPub 管理入口
+
+- Blog Control Room 启动后会把版本、PID、`127.0.0.1` 端口、启动时间和本次随机令牌
+  写入被忽略的 `.blog-admin/control-room.json`，正常关闭时清理属于当前进程的记录。
+- EasyPub 新增功能区仪表盘、命令 `Open Hexo management console` 和设置页按钮。
+- EasyPub 只识别绝对仓库路径、固定 `ManageBlog.bat`、`admin/server.js` 与精确的
+  `scripts.gui: node admin/server.js`。
+- 复用会话前会拒绝外部主机、额外参数、重复或无效令牌，并要求 `/api/status` 返回 200。
+- 对兼容仓库，EasyPub 的手工部署和自动部署均转入 Blog Control Room，不再直接调用
+  Hexo，从而保留源码选择、CI 对齐、CNAME 和 `predeploy` 门禁。
+- 博客源码提交 `f48c91c` 与 EasyPub 提交 `8146101` 已推送到各自 `main`，两个仓库的
+  GitHub Actions 均通过。
